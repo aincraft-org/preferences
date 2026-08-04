@@ -31,7 +31,7 @@ public final class DialogScreens {
     public DialogScreens(PreferenceRegistry registry, DialogSessionManager sessions, int pageSize) {
         this.registry = registry;
         this.sessions = sessions;
-        this.pageSize = pageSize;
+        this.pageSize = Math.max(1, pageSize);
     }
 
     public void showPlayerList(Player player, int page) {
