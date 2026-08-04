@@ -54,4 +54,18 @@ class DialogSessionManagerTest {
         e = assertThrows(NullPointerException.class, () -> mgr.matches(UUID.randomUUID(), null));
         assertEquals("kind", e.getMessage());
     }
+
+    @Test void closeForNamespaceClosesOnlyMatchingEditSessions() {
+        DialogSessionManager mgr = new DialogSessionManager();
+        UUID p1 = UUID.randomUUID();
+        UUID p2 = UUID.randomUUID();
+        UUID p3 = UUID.randomUUID();
+        mgr.open(new DialogSession(p1, DialogSession.Kind.EDIT, 0, new PreferenceKey("demo", "flag")));
+        mgr.open(new DialogSession(p2, DialogSession.Kind.EDIT, 0, new PreferenceKey("other", "flag")));
+        mgr.open(new DialogSession(p3, DialogSession.Kind.PLAYER_LIST, 0, null));
+        mgr.closeForNamespace("demo");
+        assertNull(mgr.current(p1));
+        assertNotNull(mgr.current(p2));
+        assertNotNull(mgr.current(p3));
+    }
 }

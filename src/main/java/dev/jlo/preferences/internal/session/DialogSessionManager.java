@@ -29,4 +29,10 @@ public final class DialogSessionManager {
         DialogSession s = sessions.get(player);
         return s != null && s.kind() == kind;
     }
+
+    /** Closes sessions targeting any preference in the given namespace (plugin disable). */
+    public void closeForNamespace(String namespace) {
+        Objects.requireNonNull(namespace, "namespace");
+        sessions.values().removeIf(s -> s.target() != null && s.target().namespace().equals(namespace));
+    }
 }

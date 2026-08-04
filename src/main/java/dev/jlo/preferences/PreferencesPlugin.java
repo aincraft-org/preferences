@@ -31,6 +31,7 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
     private YamlValueStore store;
     private DebouncedFlusher flusher;
     private ExecutorService io;
+    private DialogSessionManager sessions;
     private final Set<String> loadedNamespaces = ConcurrentHashMap.newKeySet();
 
     @Override
@@ -43,7 +44,7 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
         io = Executors.newSingleThreadExecutor(r -> new Thread(r, "Preferences IO"));
         flusher = new DebouncedFlusher(store, new BukkitFlushScheduler(), flushDelayTicks(), io);
 
-        DialogSessionManager sessions = new DialogSessionManager();
+        sessions = new DialogSessionManager();
         DialogScreens screens = new DialogScreens(registry, sessions, getConfig().getInt("gui.page-size", 20));
 
         wireStorageLookup();
@@ -98,6 +99,7 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
         if (!hasPrefs) return; // foreign plugin: nothing registered, nothing to flush or write
         // Flush this plugin's pending writes before dropping its registrations.
         flusher.flushNamespaceSync(ns);
+        sessions.closeForNamespace(ns);
         registry.unregisterNamespace(ns);
     }
 
