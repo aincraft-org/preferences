@@ -48,6 +48,17 @@ public final class DialogScreens {
             .sorted(Comparator.comparing(p -> p.key().asString()))
             .toList();
 
+        if (prefs.isEmpty()) {
+            // Paper's multiAction rejects an empty action list; surface an informative
+            // notice instead. No session is opened: the dialog has no interactive elements.
+            Component title = scope == PreferenceScope.GLOBAL
+                ? Component.text("Server Preferences")
+                : Component.text("Your Preferences");
+            player.showDialog(DialogFactories.notice(title, List.of(
+                DialogBody.plainMessage(Component.text("No preferences available.")))));
+            return;
+        }
+
         int pages = Math.max(1, (prefs.size() + pageSize - 1) / pageSize);
         int clampedPage = Math.max(0, Math.min(page, pages - 1));
         List<RegisteredPreference<?>> slice = prefs.subList(
