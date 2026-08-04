@@ -1,5 +1,8 @@
 plugins { `java` }
 
+group = "dev.jlo"
+version = "0.1.0-SNAPSHOT"
+
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
     mavenCentral()
