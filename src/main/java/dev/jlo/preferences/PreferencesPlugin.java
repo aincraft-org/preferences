@@ -94,6 +94,8 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
     public void onPluginDisable(PluginDisableEvent event) {
         if (event.getPlugin() == this) return;
         String ns = event.getPlugin().getName().toLowerCase(Locale.ROOT);
+        boolean hasPrefs = registry.all().stream().anyMatch(p -> p.key().namespace().equals(ns));
+        if (!hasPrefs) return; // foreign plugin: nothing registered, nothing to flush or write
         // Flush this plugin's pending writes before dropping its registrations.
         flusher.flushNamespaceSync(ns);
         registry.unregisterNamespace(ns);
