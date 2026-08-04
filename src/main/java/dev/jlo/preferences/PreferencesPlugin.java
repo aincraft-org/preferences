@@ -12,7 +12,9 @@ import dev.jlo.preferences.internal.dialog.ClickRouter;
 import dev.jlo.preferences.internal.dialog.DialogScreens;
 import dev.jlo.preferences.internal.session.DialogSessionManager;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +31,7 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
     private YamlValueStore store;
     private DebouncedFlusher flusher;
     private ExecutorService io;
+    private final Set<String> loadedNamespaces = ConcurrentHashMap.newKeySet();
 
     @Override
     public void onEnable() {
@@ -67,11 +70,18 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
     }
 
     private void wire(RegisteredPreference<?> pref) {
+        String ns = pref.key().namespace();
+        // First registration from a namespace loads its persisted data file (globals + all
+        // players) so lazy reads observe saved values instead of defaults. Idempotent per
+        // namespace; repeat registrations skip the file read.
+        if (loadedNamespaces.add(ns)) {
+            store.load(ns);
+        }
         pref.storedValueLookup = lookupKey -> {
             String[] parts = lookupKey.split("\u0000");
-            String ns = parts[0], target = parts[1], name = parts[2];
-            if (target.equals("\ud83c\udf10")) return store.getGlobal(ns, name);
-            return store.getPlayer(ns, UUID.fromString(target), name);
+            String lookupNs = parts[0], target = parts[1], name = parts[2];
+            if (target.equals("\ud83c\udf10")) return store.getGlobal(lookupNs, name);
+            return store.getPlayer(lookupNs, UUID.fromString(target), name);
         };
         pref.appliedHook = applied -> {
             if (applied.player() == null) store.setGlobal(applied.key().namespace(), applied.key().name(), applied.storedValue());
