@@ -1,0 +1,6 @@
+storage:
+  # Trailing window before dirty data files are written asynchronously.
+  flush-seconds: 5
+gui:
+  # Max entries per list dialog before pagination.
+  page-size: 20
