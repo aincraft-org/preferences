@@ -37,7 +37,6 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        int flushSeconds = getConfig().getInt("storage.flush-seconds", 5);
 
         registry = new PreferenceRegistry();
         store = new YamlValueStore(getDataFolder().toPath().resolve("data"));
