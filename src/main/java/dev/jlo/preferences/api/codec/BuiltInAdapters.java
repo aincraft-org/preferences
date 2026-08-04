@@ -1,0 +1,69 @@
+package dev.jlo.preferences.api.codec;
+
+import dev.jlo.preferences.internal.dialog.DialogFactories;
+import io.papermc.paper.dialog.DialogResponseView;
+import io.papermc.paper.registry.data.dialog.input.DialogInput;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+import net.kyori.adventure.text.Component;
+import org.jspecify.annotations.Nullable;
+
+public final class BuiltInAdapters {
+
+    public static DialogInputAdapter<Boolean> checkbox() {
+        return new DialogInputAdapter<>() {
+            @Override public DialogInput buildInput(String key, Component label, Boolean current) {
+                return DialogInput.bool(key, label, current, "true", "false");
+            }
+            @Override public @Nullable Boolean parseResponse(DialogResponseView r, String key) {
+                return r.getBoolean(key);
+            }
+        };
+    }
+
+    public static <N extends Number> DialogInputAdapter<N> slider(
+            float min, float max, float step,
+            Function<N, Float> toFloat, Function<Float, N> fromFloat) {
+        return new DialogInputAdapter<>() {
+            @Override public DialogInput buildInput(String key, Component label, N current) {
+                return DialogInput.numberRange(key, 200, label, "options.generic_value", min, max, toFloat.apply(current), step);
+            }
+            @Override public @Nullable N parseResponse(DialogResponseView r, String key) {
+                Float f = r.getFloat(key);
+                return f == null ? null : fromFloat.apply(f);
+            }
+        };
+    }
+
+    public static <E extends Enum<E>> DialogInputAdapter<E> optionPicker(
+            Class<E> type, Function<E, Component> display) {
+        return new DialogInputAdapter<>() {
+            @Override public DialogInput buildInput(String key, Component label, E current) {
+                List<io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput.OptionEntry> entries = Arrays.stream(type.getEnumConstants())
+                    .map(e -> DialogFactories.optionEntry(e.name(), display.apply(e), e == current))
+                    .toList();
+                return DialogInput.singleOption(key, 200, entries, label, true);
+            }
+            @Override public @Nullable E parseResponse(DialogResponseView r, String key) {
+                String id = r.getText(key);
+                if (id == null) return null;
+                try { return Enum.valueOf(type, id); }
+                catch (IllegalArgumentException e) { return null; }
+            }
+        };
+    }
+
+    public static DialogInputAdapter<String> text(int maxLength) {
+        return new DialogInputAdapter<>() {
+            @Override public DialogInput buildInput(String key, Component label, String current) {
+                return DialogInput.text(key, 200, label, true, current, maxLength, null);
+            }
+            @Override public @Nullable String parseResponse(DialogResponseView r, String key) {
+                return r.getText(key);
+            }
+        };
+    }
+
+    private BuiltInAdapters() {}
+}
