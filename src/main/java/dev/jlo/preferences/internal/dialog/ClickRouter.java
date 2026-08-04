@@ -9,6 +9,7 @@ import io.papermc.paper.connection.PlayerGameConnection;
 import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.event.player.PlayerCustomClickEvent;
 import java.util.Comparator;
+import java.util.UUID;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -127,6 +128,9 @@ public final class ClickRouter implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        sessions.close(event.getPlayer().getUniqueId());
+        UUID uuid = event.getPlayer().getUniqueId();
+        sessions.close(uuid);
+        // Evict cached per-player values so memory stays bounded across churn.
+        registry.all().forEach(p -> p.invalidatePlayer(uuid));
     }
 }
