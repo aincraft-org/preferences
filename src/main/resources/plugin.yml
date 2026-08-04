@@ -1,0 +1,17 @@
+name: Preferences
+version: '0.1.0'
+main: dev.jlo.preferences.PreferencesPlugin
+api-version: '1.21'
+description: Typed preferences with dialog GUI, owned by this plugin.
+commands:
+  preferences:
+    description: Open your preferences dialog.
+    usage: /preferences [global]
+    aliases: [prefs]
+permissions:
+  preferences.use:
+    description: Open and edit your own preferences.
+    default: true
+  preferences.manage:
+    description: View and edit server-global preferences.
+    default: op
