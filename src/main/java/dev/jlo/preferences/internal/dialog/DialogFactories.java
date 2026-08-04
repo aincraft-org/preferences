@@ -33,11 +33,14 @@ public final class DialogFactories {
             .type(DialogType.multiAction(actions, exit, 1)));
     }
 
-    /** Notice dialog with a single action button (read-only preference view). */
+    /** Notice dialog with a single Close action (read-only preference view). */
     public static Dialog notice(Component title, List<io.papermc.paper.registry.data.dialog.body.DialogBody> body) {
         return Dialog.create(builder -> builder.empty()
             .base(DialogBase.builder(title).body(body).build())
-            .type(DialogType.notice()));
+            .type(DialogType.notice(
+                ActionButton.builder(Component.text("Close"))
+                    .action(DialogAction.customClick(KEY_CANCEL, null))
+                    .build())));
     }
 
     /** Edit dialog: one input + Save (custom click) + Cancel. */
