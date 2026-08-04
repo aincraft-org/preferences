@@ -38,5 +38,20 @@ class DialogSessionManagerTest {
         mgr.open(new DialogSession(p, DialogSession.Kind.PLAYER_LIST, 0, null));
         mgr.close(p);
         assertNull(mgr.current(p));
+        assertFalse(mgr.matches(p, DialogSession.Kind.PLAYER_LIST));
+    }
+
+    @Test void nullArgumentsRejected() {
+        DialogSessionManager mgr = new DialogSessionManager();
+        NullPointerException e = assertThrows(NullPointerException.class, () -> mgr.open(null));
+        assertEquals("session", e.getMessage());
+        e = assertThrows(NullPointerException.class, () -> mgr.current(null));
+        assertEquals("player", e.getMessage());
+        e = assertThrows(NullPointerException.class, () -> mgr.close(null));
+        assertEquals("player", e.getMessage());
+        e = assertThrows(NullPointerException.class, () -> mgr.matches(null, DialogSession.Kind.EDIT));
+        assertEquals("player", e.getMessage());
+        e = assertThrows(NullPointerException.class, () -> mgr.matches(UUID.randomUUID(), null));
+        assertEquals("kind", e.getMessage());
     }
 }

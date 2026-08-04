@@ -1,6 +1,7 @@
 package dev.jlo.preferences.internal.session;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jspecify.annotations.Nullable;
@@ -10,13 +11,21 @@ public final class DialogSessionManager {
 
     private final Map<UUID, DialogSession> sessions = new ConcurrentHashMap<>();
 
-    public void open(DialogSession session) { sessions.put(session.player(), session); }
+    public void open(DialogSession session) {
+        sessions.put(Objects.requireNonNull(session, "session").player(), session);
+    }
 
-    public @Nullable DialogSession current(UUID player) { return sessions.get(player); }
+    public @Nullable DialogSession current(UUID player) {
+        return sessions.get(Objects.requireNonNull(player, "player"));
+    }
 
-    public void close(UUID player) { sessions.remove(player); }
+    public void close(UUID player) {
+        sessions.remove(Objects.requireNonNull(player, "player"));
+    }
 
     public boolean matches(UUID player, DialogSession.Kind kind) {
+        Objects.requireNonNull(player, "player");
+        Objects.requireNonNull(kind, "kind");
         DialogSession s = sessions.get(player);
         return s != null && s.kind() == kind;
     }
