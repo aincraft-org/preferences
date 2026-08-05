@@ -1,3 +1,7 @@
+plugins {
+    `maven-publish`
+}
+
 dependencies {
     implementation(project(":common"))
 
@@ -12,9 +16,43 @@ tasks.jar {
     from(project(":api").sourceSets["main"].output)
     from(project(":common").sourceSets["main"].output)
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveBaseName.set("preferences")
 }
 
-// Prefer a stable archive name for run-paper / plugins/ drops.
-tasks.jar {
-    archiveBaseName.set("preferences")
+// Optional coordinate for the shippable plugin jar (not required for API consumers).
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            // Publish the fat plugin jar only (not the plain component) so consumers
+            // get the same artifact drop that run-paper / plugins/ would load.
+            artifact(tasks.jar) {
+                extension = "jar"
+            }
+            artifact(tasks.named("sourcesJar"))
+            groupId = project.group.toString()
+            artifactId = "preferences"
+            version = project.version.toString()
+
+            pom {
+                name.set("Preferences")
+                description.set("Paper plugin: typed preferences with dialog GUI and YAML persistence.")
+                url.set("https://github.com/mintychochip/Preferences")
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/mintychochip/Preferences")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                    ?: (project.findProperty("gpr.user") as String?)
+                    ?: ""
+                password = System.getenv("GITHUB_TOKEN")
+                    ?: (project.findProperty("gpr.key") as String?)
+                    ?: ""
+            }
+        }
+    }
 }

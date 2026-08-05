@@ -1,3 +1,7 @@
+plugins {
+    // Applied per subproject that publishes; root stays aggregator-only.
+}
+
 allprojects {
     group = "dev.jlo"
     version = "0.1.0-SNAPSHOT"
@@ -23,4 +27,17 @@ subprojects {
     tasks.withType<Test>().configureEach {
         useJUnitPlatform()
     }
+}
+
+// Aggregate convenience: same path CI uses.
+tasks.register("ci") {
+    group = "verification"
+    description = "Build all modules (including :test) and run unit tests"
+    dependsOn(
+        ":api:build",
+        ":common:build",
+        ":paper:build",
+        ":test:build",
+        "test",
+    )
 }
