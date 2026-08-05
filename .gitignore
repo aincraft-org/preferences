@@ -4,3 +4,4 @@ run/
 *.iml
 .idea/
 .worktrees/
+test/run/

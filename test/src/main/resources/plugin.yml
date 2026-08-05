@@ -1,0 +1,6 @@
+name: PreferencesTest
+version: '0.1.0'
+main: dev.jlo.preferences.test.TestPlugin
+api-version: '1.21'
+depend: [Preferences]
+description: Test hooking plugin that registers preferences via the public PreferencesService API.

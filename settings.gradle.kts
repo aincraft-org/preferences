@@ -1,2 +1,3 @@
 rootProject.name = "preferences"
-include("demo")
+
+include("api", "common", "paper", "test")
