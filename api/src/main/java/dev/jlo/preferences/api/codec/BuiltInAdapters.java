@@ -31,7 +31,10 @@ public final class BuiltInAdapters {
             }
             @Override public @Nullable N parseResponse(DialogResponseView r, String key) {
                 Float f = r.getFloat(key);
-                return f == null ? null : fromFloat.apply(f);
+                if (f == null) return null;
+                // Defense in depth: do not trust client-supplied values outside the declared range.
+                if (f < min || f > max) return null;
+                return fromFloat.apply(f);
             }
         };
     }
@@ -55,12 +58,19 @@ public final class BuiltInAdapters {
     }
 
     public static DialogInputAdapter<String> text(int maxLength) {
+        if (maxLength < 0) {
+            throw new IllegalArgumentException("maxLength must be >= 0");
+        }
         return new DialogInputAdapter<>() {
             @Override public DialogInput buildInput(String key, Component label, String current) {
                 return DialogInput.text(key, 200, label, true, current, maxLength, null);
             }
             @Override public @Nullable String parseResponse(DialogResponseView r, String key) {
-                return r.getText(key);
+                String text = r.getText(key);
+                if (text == null) return null;
+                // Defense in depth: reject over-long payloads even if the client ignores maxLength.
+                if (text.length() > maxLength) return null;
+                return text;
             }
         };
     }
