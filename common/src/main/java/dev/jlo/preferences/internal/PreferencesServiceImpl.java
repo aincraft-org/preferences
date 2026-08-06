@@ -7,14 +7,26 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.function.Consumer;
 import org.bukkit.plugin.Plugin;
+import org.jspecify.annotations.Nullable;
 
 /** Default {@link PreferencesService} implementation, registered by the plugin in onEnable. */
 public final class PreferencesServiceImpl implements PreferencesService {
 
     private final PreferenceRegistry registry;
+    private final @Nullable Consumer<String> beforeUnregisterNamespace;
 
     public PreferencesServiceImpl(PreferenceRegistry registry) {
+        this(registry, null);
+    }
+
+    /**
+     * @param beforeUnregisterNamespace invoked with the plugin namespace before registry removal
+     *                                  (flush pending writes + close dialog sessions).
+     */
+    public PreferencesServiceImpl(PreferenceRegistry registry,
+                                  @Nullable Consumer<String> beforeUnregisterNamespace) {
         this.registry = registry;
+        this.beforeUnregisterNamespace = beforeUnregisterNamespace;
     }
 
     @Override
@@ -42,6 +54,10 @@ public final class PreferencesServiceImpl implements PreferencesService {
 
     @Override
     public void unregisterPlugin(Plugin plugin) {
-        registry.unregisterNamespace(plugin.getName().toLowerCase(Locale.ROOT));
+        String ns = plugin.getName().toLowerCase(Locale.ROOT);
+        if (beforeUnregisterNamespace != null) {
+            beforeUnregisterNamespace.accept(ns);
+        }
+        registry.unregisterNamespace(ns);
     }
 }
