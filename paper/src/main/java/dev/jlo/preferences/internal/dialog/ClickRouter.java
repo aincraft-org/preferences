@@ -10,6 +10,7 @@ import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.event.player.PlayerCustomClickEvent;
 import java.util.Comparator;
 import java.util.UUID;
+import java.util.function.Consumer;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -26,11 +27,18 @@ public final class ClickRouter implements Listener {
     private final PreferenceRegistry registry;
     private final DialogSessionManager sessions;
     private final DialogScreens screens;
+    private final @Nullable Consumer<UUID> playerEvictor;
 
     public ClickRouter(PreferenceRegistry registry, DialogSessionManager sessions, DialogScreens screens) {
+        this(registry, sessions, screens, null);
+    }
+
+    public ClickRouter(PreferenceRegistry registry, DialogSessionManager sessions, DialogScreens screens,
+                       @Nullable Consumer<UUID> playerEvictor) {
         this.registry = registry;
         this.sessions = sessions;
         this.screens = screens;
+        this.playerEvictor = playerEvictor;
     }
 
     @EventHandler
@@ -64,13 +72,32 @@ public final class ClickRouter implements Listener {
 
     private void navigate(Player player, DialogSession session, int newPage) {
         switch (session.kind()) {
-            case PLAYER_LIST -> screens.showPlayerList(player, newPage);
-            case GLOBAL_LIST -> screens.showGlobalList(player, newPage);
+            case PLAYER_LIST -> {
+                if (!player.hasPermission("preferences.use")) {
+                    denyAndClose(player, PreferenceScope.PLAYER);
+                    return;
+                }
+                screens.showPlayerList(player, newPage);
+            }
+            case GLOBAL_LIST -> {
+                if (!player.hasPermission("preferences.manage")) {
+                    denyAndClose(player, PreferenceScope.GLOBAL);
+                    return;
+                }
+                screens.showGlobalList(player, newPage);
+            }
             case EDIT -> {} // nav buttons never appear in edit dialogs
         }
     }
 
     private void openEditByIndex(Player player, DialogSession session, String indexStr) {
+        PreferenceScope scope = session.kind() == DialogSession.Kind.GLOBAL_LIST
+            ? PreferenceScope.GLOBAL
+            : PreferenceScope.PLAYER;
+        if (!mayEdit(player, scope)) {
+            denyAndClose(player, scope);
+            return;
+        }
         int index;
         try {
             index = Integer.parseInt(indexStr);
@@ -79,9 +106,7 @@ public final class ClickRouter implements Listener {
         }
 
         var scopePrefs = registry.all().stream()
-            .filter(p -> p.scope() == (session.kind() == DialogSession.Kind.GLOBAL_LIST
-                ? PreferenceScope.GLOBAL
-                : PreferenceScope.PLAYER))
+            .filter(p -> p.scope() == scope)
             .sorted(Comparator.comparing(p -> p.key().asString()))
             .toList();
         int absolute = session.page() * screens.pageSize() + index;
@@ -104,6 +129,11 @@ public final class ClickRouter implements Listener {
 
     private <T> void saveTyped(Player player, RegisteredPreference<T> pref,
                                @Nullable DialogResponseView view, int returnPage) {
+        // Re-check permissions at save time (session may outlive a revoke).
+        if (!mayEdit(player, pref.scope())) {
+            denyAndClose(player, pref.scope());
+            return;
+        }
         var adapter = pref.codec().input();
         T parsed = (adapter == null || view == null) ? null : adapter.parseResponse(view, "value");
         if (parsed == null) {
@@ -111,11 +141,8 @@ public final class ClickRouter implements Listener {
             screens.showEdit(player, pref, returnPage);
             return;
         }
-        if (pref.scope() == PreferenceScope.GLOBAL && !player.hasPermission("preferences.manage")) {
-            player.sendMessage(Component.text("You don't have permission to change server preferences.", NamedTextColor.RED));
-            return;
-        }
-        if (pref.scope() == PreferenceScope.GLOBAL) pref.setGlobal(parsed);
+        // Attribute global dialog saves to the acting player for PreferenceChangeEvent.editor().
+        if (pref.scope() == PreferenceScope.GLOBAL) pref.setGlobal(player, parsed);
         else pref.set(player, parsed);
         player.sendMessage(Component.text("Saved ", NamedTextColor.GREEN)
             .append(pref.label()).append(Component.text(".", NamedTextColor.GREEN)));
@@ -126,11 +153,25 @@ public final class ClickRouter implements Listener {
         }
     }
 
+    private static boolean mayEdit(Player player, PreferenceScope scope) {
+        if (scope == PreferenceScope.GLOBAL) return player.hasPermission("preferences.manage");
+        return player.hasPermission("preferences.use");
+    }
+
+    private void denyAndClose(Player player, PreferenceScope scope) {
+        String msg = scope == PreferenceScope.GLOBAL
+            ? "You don't have permission to change server preferences."
+            : "You don't have permission to use preferences.";
+        player.sendMessage(Component.text(msg, NamedTextColor.RED));
+        sessions.close(player.getUniqueId());
+    }
+
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         UUID uuid = event.getPlayer().getUniqueId();
         sessions.close(uuid);
-        // Evict cached per-player values so memory stays bounded across churn.
+        // Evict typed caches + store hot rows so memory stays bounded across churn.
         registry.all().forEach(p -> p.invalidatePlayer(uuid));
+        if (playerEvictor != null) playerEvictor.accept(uuid);
     }
 }

@@ -8,6 +8,7 @@ commands:
     description: Open your preferences dialog.
     usage: /preferences [global]
     aliases: [prefs]
+    permission: preferences.use
 permissions:
   preferences.use:
     description: Open and edit your own preferences.

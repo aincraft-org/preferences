@@ -48,10 +48,10 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
 
         wireStorageLookup();
 
-        PreferencesService service = new PreferencesServiceImpl(registry);
+        PreferencesService service = new PreferencesServiceImpl(registry, this::teardownNamespace);
         Bukkit.getServicesManager().register(PreferencesService.class, service, this, ServicePriority.Normal);
 
-        ClickRouter router = new ClickRouter(registry, sessions, screens);
+        ClickRouter router = new ClickRouter(registry, sessions, screens, store::evictPlayerAllNamespaces);
         Bukkit.getPluginManager().registerEvents(router, this);
         Bukkit.getPluginManager().registerEvents(this, this);
 
@@ -71,9 +71,9 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
 
     private void wire(RegisteredPreference<?> pref) {
         String ns = pref.key().namespace();
-        // First registration from a namespace loads its persisted data file (globals + all
-        // players) so lazy reads observe saved values instead of defaults. Idempotent per
-        // namespace; repeat registrations skip the file read.
+        // First registration from a namespace loads its persisted globals so lazy reads
+        // observe saved values instead of defaults. Player rows load on demand via Caffeine.
+        // Idempotent per namespace; repeat registrations skip the file read.
         if (loadedNamespaces.add(ns)) {
             store.load(ns);
         }
@@ -90,15 +90,23 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
         };
     }
 
+    /**
+     * Flush pending writes and close dialog sessions for a namespace before registry removal.
+     * Shared by {@link PreferencesService#unregisterPlugin} and foreign {@link PluginDisableEvent}.
+     */
+    private void teardownNamespace(String ns) {
+        flusher.flushNamespaceSync(ns);
+        sessions.closeForNamespace(ns);
+        loadedNamespaces.remove(ns);
+    }
+
     @EventHandler
     public void onPluginDisable(PluginDisableEvent event) {
         if (event.getPlugin() == this) return;
         String ns = event.getPlugin().getName().toLowerCase(Locale.ROOT);
         boolean hasPrefs = registry.all().stream().anyMatch(p -> p.key().namespace().equals(ns));
         if (!hasPrefs) return; // foreign plugin: nothing registered, nothing to flush or write
-        // Flush this plugin's pending writes before dropping its registrations.
-        flusher.flushNamespaceSync(ns);
-        sessions.closeForNamespace(ns);
+        teardownNamespace(ns);
         registry.unregisterNamespace(ns);
     }
 
