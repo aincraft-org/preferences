@@ -1,11 +1,16 @@
 package dev.jlo.preferences.api.codec;
 
+import java.util.Objects;
 import java.util.function.Function;
 import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.Nullable;
 
 /** Bundles the storage codec (required) and dialog adapter (optional). */
 public record PreferenceCodec<T>(StorageCodec<T> storage, @Nullable DialogInputAdapter<T> input) {
+    public PreferenceCodec {
+        Objects.requireNonNull(storage, "storage");
+        // input is intentionally nullable (read-only-in-GUI / storageOnly)
+    }
 
     public static PreferenceCodec<String> string(int maxLength) {
         return new PreferenceCodec<>(BuiltInCodecs.STRING, BuiltInAdapters.text(maxLength));
@@ -37,11 +42,13 @@ public record PreferenceCodec<T>(StorageCodec<T> storage, @Nullable DialogInputA
 
     public static <E extends Enum<E>> PreferenceCodec<E> enumerated(
             Class<E> type, Function<E, Component> display) {
+        Objects.requireNonNull(type, "type");
+        Objects.requireNonNull(display, "display");
         return new PreferenceCodec<>(BuiltInCodecs.enumerated(type), BuiltInAdapters.optionPicker(type, display));
     }
 
     /** Persistable but not dialog-editable (read-only in GUI). */
     public static <T> PreferenceCodec<T> storageOnly(StorageCodec<T> storage) {
-        return new PreferenceCodec<>(storage, null);
+        return new PreferenceCodec<>(Objects.requireNonNull(storage, "storage"), null);
     }
 }

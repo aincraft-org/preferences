@@ -40,4 +40,22 @@ class PreferenceRegistryTest {
         assertNull(registry.byKey(new PreferenceKey("demo", "a")));
         assertNotNull(registry.byKey(new PreferenceKey("other", "b")));
     }
+
+    @Test void registerRejectsNullPref() {
+        PreferenceRegistry registry = new PreferenceRegistry();
+        assertEquals("pref", assertThrows(NullPointerException.class,
+            () -> registry.register(null)).getMessage());
+    }
+
+    @Test void byKeyRejectsNull() {
+        PreferenceRegistry registry = new PreferenceRegistry();
+        assertEquals("key", assertThrows(NullPointerException.class,
+            () -> registry.byKey(null)).getMessage());
+    }
+
+    @Test void unregisterNamespaceRejectsNull() {
+        PreferenceRegistry registry = new PreferenceRegistry();
+        assertEquals("namespace", assertThrows(NullPointerException.class,
+            () -> registry.unregisterNamespace(null)).getMessage());
+    }
 }

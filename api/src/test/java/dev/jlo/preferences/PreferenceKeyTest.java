@@ -25,4 +25,16 @@ class PreferenceKeyTest {
     void rejectsBadName(String name) {
         assertThrows(IllegalArgumentException.class, () -> new PreferenceKey("demo", name));
     }
+
+    @Test void rejectsNullNamespace() {
+        NullPointerException e = assertThrows(NullPointerException.class,
+            () -> new PreferenceKey(null, "ok"));
+        assertEquals("namespace", e.getMessage());
+    }
+
+    @Test void rejectsNullName() {
+        NullPointerException e = assertThrows(NullPointerException.class,
+            () -> new PreferenceKey("demo", null));
+        assertEquals("name", e.getMessage());
+    }
 }

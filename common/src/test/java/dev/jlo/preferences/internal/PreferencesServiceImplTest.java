@@ -39,4 +39,33 @@ class PreferencesServiceImplTest {
         assertTrue(stillRegisteredDuringTeardown.get(), "teardown must run before registry removal");
         assertNull(registry.byKey(pref.key()));
     }
+
+    @Test void registerRejectsNullOwnerTypeConfigure() {
+        PreferencesServiceImpl service = new PreferencesServiceImpl(new PreferenceRegistry());
+        Plugin plugin = mock(Plugin.class);
+        when(plugin.getName()).thenReturn("Demo");
+
+        assertEquals("owner", assertThrows(NullPointerException.class,
+            () -> service.register(null, Boolean.class, b -> {})).getMessage());
+        assertEquals("type", assertThrows(NullPointerException.class,
+            () -> service.register(plugin, null, b -> {})).getMessage());
+        assertEquals("configure", assertThrows(NullPointerException.class,
+            () -> service.register(plugin, Boolean.class, null)).getMessage());
+    }
+
+    @Test void unregisterPluginRejectsNull() {
+        PreferencesServiceImpl service = new PreferencesServiceImpl(new PreferenceRegistry());
+        assertEquals("plugin", assertThrows(NullPointerException.class,
+            () -> service.unregisterPlugin(null)).getMessage());
+    }
+
+    @Test void constructorAllowsNullTeardownHook() {
+        PreferencesServiceImpl service = new PreferencesServiceImpl(new PreferenceRegistry(), null);
+        assertNotNull(service.all());
+    }
+
+    @Test void constructorRejectsNullRegistry() {
+        assertEquals("registry", assertThrows(NullPointerException.class,
+            () -> new PreferencesServiceImpl(null)).getMessage());
+    }
 }

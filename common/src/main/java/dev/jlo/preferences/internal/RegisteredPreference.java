@@ -7,6 +7,7 @@ import dev.jlo.preferences.api.PreferenceScope;
 import dev.jlo.preferences.api.codec.PreferenceCodec;
 import dev.jlo.preferences.api.event.PreferenceChangeEvent;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -39,14 +40,14 @@ public final class RegisteredPreference<T> implements Preference<T> {
     public RegisteredPreference(PreferenceKey key, PreferenceScope scope, Component label,
                                 Component description, PreferenceCodec<T> codec, Class<T> type,
                                 T defaultValue, @Nullable Consumer<PreferenceChange> onChange) {
-        this.key = key;
-        this.scope = scope;
-        this.label = label;
-        this.description = description;
-        this.codec = codec;
-        this.type = type;
-        this.defaultValue = defaultValue;
-        this.onChange = onChange;
+        this.key = Objects.requireNonNull(key, "key");
+        this.scope = Objects.requireNonNull(scope, "scope");
+        this.label = Objects.requireNonNull(label, "label");
+        this.description = Objects.requireNonNull(description, "description");
+        this.codec = Objects.requireNonNull(codec, "codec");
+        this.type = Objects.requireNonNull(type, "type");
+        this.defaultValue = Objects.requireNonNull(defaultValue, "defaultValue");
+        this.onChange = onChange; // intentionally nullable
     }
 
     @Override
@@ -86,6 +87,7 @@ public final class RegisteredPreference<T> implements Preference<T> {
     @Override
     public T get(Player player) {
         checkScope(PreferenceScope.PLAYER);
+        Objects.requireNonNull(player, "player");
         return playerValues.computeIfAbsent(player.getUniqueId(), uuid -> {
             String stored = storedValueLookup == null ? null
                 : storedValueLookup.apply(key.namespace() + "\u0000" + uuid + "\u0000" + key.name());
@@ -114,23 +116,29 @@ public final class RegisteredPreference<T> implements Preference<T> {
     @Override
     public void set(Player player, T newValue) {
         checkScope(PreferenceScope.PLAYER);
+        Objects.requireNonNull(player, "player");
+        Objects.requireNonNull(newValue, "value");
         apply(player, player.getUniqueId(), newValue);
     }
 
     @Override
     public void setGlobal(T newValue) {
         checkScope(PreferenceScope.GLOBAL);
-        apply(null, null, newValue);
+        Objects.requireNonNull(newValue, "value");
+        apply(null, null, newValue); // editor intentionally null (programmatic)
     }
 
     @Override
     public void setGlobal(Player editor, T newValue) {
         checkScope(PreferenceScope.GLOBAL);
+        Objects.requireNonNull(editor, "editor");
+        Objects.requireNonNull(newValue, "value");
         apply(null, editor.getUniqueId(), newValue);
     }
 
     @Override
     public void reset(Player player) {
+        Objects.requireNonNull(player, "player");
         set(player, defaultValue);
     }
 
@@ -144,6 +152,7 @@ public final class RegisteredPreference<T> implements Preference<T> {
      * @param editor UUID attributed on {@link PreferenceChangeEvent} (may be set for global GUI edits)
      */
     private void apply(@Nullable Player scopePlayer, @Nullable UUID editor, T newValue) {
+        // newValue already requireNonNull'd at public boundary
         if (!type.isInstance(newValue)) {
             throw new IllegalArgumentException("value is not " + type.getSimpleName());
         }
@@ -194,6 +203,6 @@ public final class RegisteredPreference<T> implements Preference<T> {
 
     /** Session/dialog support: evict cached value so next read reloads from store. */
     public void invalidatePlayer(UUID uuid) {
-        playerValues.remove(uuid);
+        playerValues.remove(Objects.requireNonNull(uuid, "uuid"));
     }
 }

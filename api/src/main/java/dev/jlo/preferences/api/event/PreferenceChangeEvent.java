@@ -20,10 +20,10 @@ public class PreferenceChangeEvent extends Event implements Cancellable {
     private boolean cancelled;
 
     public PreferenceChangeEvent(PreferenceKey key, String oldValue, String newValue, @Nullable UUID editor) {
-        this.key = key;
-        this.oldValue = oldValue;
-        this.newValue = newValue;
-        this.editor = editor;
+        this.key = java.util.Objects.requireNonNull(key, "key");
+        this.oldValue = java.util.Objects.requireNonNull(oldValue, "oldValue");
+        this.newValue = java.util.Objects.requireNonNull(newValue, "newValue");
+        this.editor = editor; // intentionally nullable (programmatic/console)
     }
 
     public PreferenceKey key() {

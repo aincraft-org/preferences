@@ -52,8 +52,15 @@ class BuiltInCodecsTest {
         assertThrows(IllegalArgumentException.class, () -> c.parse("medium"));
     }
 
-    @Test void enumRejectsNull() {
-        assertThrows(IllegalArgumentException.class,
+    @Test void enumRejectsNullStored() {
+        NullPointerException e = assertThrows(NullPointerException.class,
             () -> BuiltInCodecs.enumerated(Mode.class).parse(null));
+        assertEquals("stored", e.getMessage());
+    }
+
+    @Test void writeRejectsNullValue() {
+        NullPointerException e = assertThrows(NullPointerException.class,
+            () -> BuiltInCodecs.STRING.write(null));
+        assertEquals("value", e.getMessage());
     }
 }
