@@ -38,7 +38,7 @@ Publish the API to your machine (or use GitHub Packages — see below):
 ### Coordinate
 
 ```
-dev.jlo:preferences-api:0.1.0-SNAPSHOT
+dev.jlo:preferences-api:0.1.0
 ```
 
 ### Gradle (consumer)
@@ -60,7 +60,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("dev.jlo:preferences-api:0.1.0-SNAPSHOT")
+    compileOnly("dev.jlo:preferences-api:0.1.0")
     compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
 }
 ```
@@ -78,7 +78,7 @@ dependencies {
 <dependency>
   <groupId>dev.jlo</groupId>
   <artifactId>preferences-api</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.0</version>
   <scope>provided</scope>
 </dependency>
 ```
