@@ -15,7 +15,8 @@ public class PreferenceChangeEvent extends Event implements Cancellable {
     private final PreferenceKey key;
     private final String oldValue;
     private final String newValue;
-    private final @Nullable UUID editor; // null when set programmatically/console
+    /** Editor player UUID; null for programmatic/console sets. Global dialog saves pass the admin. */
+    private final @Nullable UUID editor;
     private boolean cancelled;
 
     public PreferenceChangeEvent(PreferenceKey key, String oldValue, String newValue, @Nullable UUID editor) {

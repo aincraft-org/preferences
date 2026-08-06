@@ -23,7 +23,14 @@ public interface Preference<T> {
 
     void set(Player player, T value);
 
+    /** Programmatic global set; {@code PreferenceChangeEvent.editor()} is null. */
     void setGlobal(T value);
+
+    /**
+     * Global set attributed to an editor (e.g. an admin saving from the dialog).
+     * {@code PreferenceChangeEvent.editor()} is the editor's UUID.
+     */
+    void setGlobal(Player editor, T value);
 
     void reset(Player player);
 

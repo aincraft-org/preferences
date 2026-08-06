@@ -114,13 +114,19 @@ public final class RegisteredPreference<T> implements Preference<T> {
     @Override
     public void set(Player player, T newValue) {
         checkScope(PreferenceScope.PLAYER);
-        apply(player, newValue);
+        apply(player, player.getUniqueId(), newValue);
     }
 
     @Override
     public void setGlobal(T newValue) {
         checkScope(PreferenceScope.GLOBAL);
-        apply(null, newValue);
+        apply(null, null, newValue);
+    }
+
+    @Override
+    public void setGlobal(Player editor, T newValue) {
+        checkScope(PreferenceScope.GLOBAL);
+        apply(null, editor.getUniqueId(), newValue);
     }
 
     @Override
@@ -133,31 +139,35 @@ public final class RegisteredPreference<T> implements Preference<T> {
         setGlobal(defaultValue);
     }
 
-    private void apply(@Nullable Player player, T newValue) {
+    /**
+     * @param scopePlayer player whose value is being set (null for global)
+     * @param editor UUID attributed on {@link PreferenceChangeEvent} (may be set for global GUI edits)
+     */
+    private void apply(@Nullable Player scopePlayer, @Nullable UUID editor, T newValue) {
         if (!type.isInstance(newValue)) {
             throw new IllegalArgumentException("value is not " + type.getSimpleName());
         }
-        UUID playerId = player == null ? null : player.getUniqueId();
         // Force the lazy load of the current value first so a cold cache reports the true stored
         // value, not the default. get()/getGlobal() are the lazy-loading paths and fire no events.
-        T current = (player == null) ? getGlobal() : get(player);
+        T current = (scopePlayer == null) ? getGlobal() : get(scopePlayer);
         String newStored = codec.storage().write(newValue);
         String oldStored = codec.storage().write(current);
 
-        PreferenceChangeEvent event = new PreferenceChangeEvent(key, oldStored, newStored, playerId);
+        PreferenceChangeEvent event = new PreferenceChangeEvent(key, oldStored, newStored, editor);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             return;
         }
 
-        if (player == null) {
+        if (scopePlayer == null) {
             globalValue = newValue;
         } else {
-            playerValues.put(playerId, newValue);
+            playerValues.put(scopePlayer.getUniqueId(), newValue);
         }
 
         if (appliedHook != null) {
-            appliedHook.accept(new Applied(key, scope, playerId, newStored));
+            UUID storedPlayer = scopePlayer == null ? null : scopePlayer.getUniqueId();
+            appliedHook.accept(new Applied(key, scope, storedPlayer, newStored));
         }
         if (onChange != null) {
             onChange.accept(new PreferenceChange(key, oldStored, newStored));
