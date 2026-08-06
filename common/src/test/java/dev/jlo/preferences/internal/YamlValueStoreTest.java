@@ -83,4 +83,88 @@ class YamlValueStoreTest {
         reloaded.load("demo");
         assertEquals("newer", reloaded.getGlobal("demo", "k"));
     }
+
+    @Test void writeMergesCachedPlayersWithOnDiskPlayers(@TempDir Path dir) throws IOException {
+        UUID cold = UUID.randomUUID();
+        UUID hot = UUID.randomUUID();
+        YamlValueStore seed = new YamlValueStore(dir);
+        seed.setPlayer("demo", cold, "a", "cold");
+        seed.write("demo");
+
+        // Fresh store: cold lives only on disk; hot is a new dirty mutation.
+        YamlValueStore store = new YamlValueStore(dir);
+        store.load("demo");
+        store.setPlayer("demo", hot, "b", "hot");
+        store.write("demo");
+
+        YamlValueStore reloaded = new YamlValueStore(dir);
+        reloaded.load("demo");
+        assertEquals("cold", reloaded.getPlayer("demo", cold, "a"));
+        assertEquals("hot", reloaded.getPlayer("demo", hot, "b"));
+    }
+
+    @Test void successfulWritePrunesDirtyMap(@TempDir Path dir) {
+        YamlValueStore store = new YamlValueStore(dir);
+        UUID uuid = UUID.randomUUID();
+        store.setPlayer("demo", uuid, "k", "v");
+        assertEquals(1, store.dirtyPlayerCount("demo"));
+        store.write("demo");
+        assertEquals(0, store.dirtyPlayerCount("demo"));
+        assertEquals("v", store.getPlayer("demo", uuid, "k"));
+    }
+
+    @Test void evictPlayerDropsCacheButKeepsDisk(@TempDir Path dir) {
+        YamlValueStore store = new YamlValueStore(dir);
+        UUID uuid = UUID.randomUUID();
+        store.setPlayer("demo", uuid, "k", "v");
+        store.write("demo");
+        assertTrue(store.cachedPlayerCount("demo") >= 1);
+        store.evictPlayer("demo", uuid);
+        assertEquals(0, store.cachedPlayerCount("demo"));
+        assertEquals("v", store.getPlayer("demo", uuid, "k"), "read-through must reload from disk");
+    }
+
+    @Test void evictPlayerSkipsDirtyEntries(@TempDir Path dir) {
+        YamlValueStore store = new YamlValueStore(dir);
+        UUID uuid = UUID.randomUUID();
+        store.setPlayer("demo", uuid, "k", "dirty");
+        store.evictPlayer("demo", uuid);
+        assertEquals(1, store.dirtyPlayerCount("demo"));
+        assertEquals("dirty", store.getPlayer("demo", uuid, "k"));
+    }
+
+    @Test void removePlayerDataDropsFromNextWrite(@TempDir Path dir) throws IOException {
+        YamlValueStore store = new YamlValueStore(dir);
+        UUID uuid = UUID.randomUUID();
+        store.setPlayer("demo", uuid, "k", "v");
+        store.write("demo");
+        store.removePlayerData("demo", uuid);
+        store.write("demo");
+
+        YamlValueStore reloaded = new YamlValueStore(dir);
+        reloaded.load("demo");
+        assertNull(reloaded.getPlayer("demo", uuid, "k"));
+    }
+
+    @Test void caffeineMaximumSizeBoundsHotCache(@TempDir Path dir) {
+        // max 2 hot players after flush re-warm; further reads must not grow past max.
+        YamlValueStore store = new YamlValueStore(dir, 2, java.time.Duration.ofHours(1));
+        UUID a = UUID.randomUUID();
+        UUID b = UUID.randomUUID();
+        UUID c = UUID.randomUUID();
+        store.setPlayer("demo", a, "k", "1");
+        store.setPlayer("demo", b, "k", "2");
+        store.setPlayer("demo", c, "k", "3");
+        store.write("demo"); // re-warms only the 3 flushed rows; caffeine caps at 2
+        store.cacheForCleanup("demo");
+        assertTrue(store.cachedPlayerCount("demo") <= 2,
+            "caffeine must bound hot player rows, was " + store.cachedPlayerCount("demo"));
+        // All three still readable via disk read-through.
+        assertEquals("1", store.getPlayer("demo", a, "k"));
+        assertEquals("2", store.getPlayer("demo", b, "k"));
+        assertEquals("3", store.getPlayer("demo", c, "k"));
+        store.cacheForCleanup("demo");
+        assertTrue(store.cachedPlayerCount("demo") <= 2,
+            "after read-through cache must still be bounded, was " + store.cachedPlayerCount("demo"));
+    }
 }

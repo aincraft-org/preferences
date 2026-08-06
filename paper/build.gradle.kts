@@ -10,11 +10,17 @@ dependencies {
 }
 
 // Ship api + common classes inside the Preferences plugin jar so a single
-// plugin load brings the full runtime (public API + internals).
+// plugin load brings the full runtime (public API + internals). Also embed
+// common's runtime deps that Paper does not provide (Caffeine).
 tasks.jar {
     dependsOn(":api:classes", ":common:classes")
     from(project(":api").sourceSets["main"].output)
     from(project(":common").sourceSets["main"].output)
+    from({
+        project(":common").configurations["runtimeClasspath"]
+            .filter { it.name.startsWith("caffeine") }
+            .map { if (it.isDirectory) it else zipTree(it) }
+    })
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveBaseName.set("preferences")
 }

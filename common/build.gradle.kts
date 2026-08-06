@@ -1,6 +1,8 @@
 dependencies {
     api(project(":api"))
 
+    implementation("com.github.ben-manes.caffeine:caffeine:3.2.0")
+
     compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
     compileOnly("org.jspecify:jspecify:1.0.0")
 
