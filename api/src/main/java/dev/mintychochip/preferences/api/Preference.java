@@ -1,0 +1,38 @@
+package dev.mintychochip.preferences.api;
+
+import net.kyori.adventure.text.Component;
+import org.bukkit.entity.Player;
+
+/** Typed handle for a registered preference. */
+public interface Preference<T> {
+    PreferenceKey key();
+
+    PreferenceScope scope();
+
+    Class<T> type();
+
+    Component label();
+
+    Component description();
+
+    T defaultValue();
+
+    T get(Player player);
+
+    T getGlobal();
+
+    void set(Player player, T value);
+
+    /** Programmatic global set; {@code PreferenceChangeEvent.editor()} is null. */
+    void setGlobal(T value);
+
+    /**
+     * Global set attributed to an editor (e.g. an admin saving from the dialog).
+     * {@code PreferenceChangeEvent.editor()} is the editor's UUID.
+     */
+    void setGlobal(Player editor, T value);
+
+    void reset(Player player);
+
+    void resetGlobal();
+}

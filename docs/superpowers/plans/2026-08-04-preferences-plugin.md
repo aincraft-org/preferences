@@ -17,7 +17,7 @@
 - No main-thread YAML serialization or file I/O on the change path. Writes go through the debounced async flusher; `onDisable` flushes synchronously.
 - Vanilla dialog input `key` values must match `[a-zA-Z0-9_]` (template-argument rule) — never pass namespaced keys as dialog input keys.
 - `PlayerCustomClickEvent` also fires for plain chat click events: every click is validated against a live session before acting. No session → silently ignore.
-- Packages: public API in `dev.jlo.preferences.api` (+ `.api.codec`, `.api.event`); everything else in `dev.jlo.preferences.internal.*`. Hooking plugins import only `dev.jlo.preferences.api`.
+- Packages: public API in `dev.mintychochip.preferences.api` (+ `.api.codec`, `.api.event`); everything else in `dev.mintychochip.preferences.internal.*`. Hooking plugins import only `dev.mintychochip.preferences.api`.
 - Storage values are always `StorageCodec.write(T)` strings; files live at `plugins/Preferences/data/<namespace>.yml`.
 - Commit style: `feat:`, `test:`, `chore:`, `docs:` prefixes; one commit per task unless noted.
 - Never run project-wide verification inside a task except that task's own `gradle test` filter.
@@ -89,7 +89,7 @@ include("demo")
 ```kotlin
 plugins { `java-library` }
 
-group = "dev.jlo"
+group = "dev.mintychochip"
 version = "0.1.0-SNAPSHOT"
 
 repositories {
@@ -147,7 +147,7 @@ run/
 ```yaml
 name: Preferences
 version: '0.1.0'
-main: dev.jlo.preferences.PreferencesPlugin
+main: dev.mintychochip.preferences.PreferencesPlugin
 api-version: '1.21'
 description: Typed preferences with dialog GUI, owned by this plugin.
 ```
@@ -167,7 +167,7 @@ Expected: wrapper files created; `Gradle 9.6.1` printed.
 
 `src/main/java/dev/jlo/preferences/internal/dialog/DialogFactories.java`:
 ```java
-package dev.jlo.preferences.internal.dialog;
+package dev.mintychochip.preferences.internal.dialog;
 
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
@@ -274,12 +274,12 @@ git add -A && git commit -m "chore: gradle skeleton + dialog API probe"
 
 `src/test/java/dev/jlo/preferences/codec/BuiltInCodecsTest.java`:
 ```java
-package dev.jlo.preferences.codec;
+package dev.mintychochip.preferences.codec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.jlo.preferences.api.codec.BuiltInCodecs;
-import dev.jlo.preferences.api.codec.StorageCodec;
+import dev.mintychochip.preferences.api.codec.BuiltInCodecs;
+import dev.mintychochip.preferences.api.codec.StorageCodec;
 import org.junit.jupiter.api.Test;
 
 class BuiltInCodecsTest {
@@ -332,21 +332,21 @@ class BuiltInCodecsTest {
 
 - [ ] **Step 2: Run tests, expect failure**
 
-Run: `./gradlew test --tests 'dev.jlo.preferences.codec.BuiltInCodecsTest' --console=plain`
+Run: `./gradlew test --tests 'dev.mintychochip.preferences.codec.BuiltInCodecsTest' --console=plain`
 Expected: FAIL — classes do not exist yet.
 
 - [ ] **Step 3: Implement codec layer**
 
 `api/PreferenceScope.java`:
 ```java
-package dev.jlo.preferences.api;
+package dev.mintychochip.preferences.api;
 
 public enum PreferenceScope { PLAYER, GLOBAL }
 ```
 
 `api/codec/StorageCodec.java`:
 ```java
-package dev.jlo.preferences.api.codec;
+package dev.mintychochip.preferences.api.codec;
 
 /** Converts between a preference's typed value and its stored string form. */
 public interface StorageCodec<T> {
@@ -359,7 +359,7 @@ public interface StorageCodec<T> {
 
 `api/codec/DialogInputAdapter.java`:
 ```java
-package dev.jlo.preferences.api.codec;
+package dev.mintychochip.preferences.api.codec;
 
 import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
@@ -377,9 +377,9 @@ public interface DialogInputAdapter<T> {
 
 `api/codec/PreferenceCodec.java`:
 ```java
-package dev.jlo.preferences.api.codec;
+package dev.mintychochip.preferences.api.codec;
 
-import dev.jlo.preferences.api.PreferenceScope;
+import dev.mintychochip.preferences.api.PreferenceScope;
 import java.util.function.Function;
 import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.Nullable;
@@ -429,7 +429,7 @@ public record PreferenceCodec<T>(StorageCodec<T> storage, @Nullable DialogInputA
 
 `api/codec/BuiltInCodecs.java`:
 ```java
-package dev.jlo.preferences.api.codec;
+package dev.mintychochip.preferences.api.codec;
 
 public final class BuiltInCodecs {
 
@@ -481,9 +481,9 @@ public final class BuiltInCodecs {
 
 `api/codec/BuiltInAdapters.java`:
 ```java
-package dev.jlo.preferences.api.codec;
+package dev.mintychochip.preferences.api.codec;
 
-import dev.jlo.preferences.internal.dialog.DialogFactories;
+import dev.mintychochip.preferences.internal.dialog.DialogFactories;
 import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import java.util.Arrays;
@@ -560,7 +560,7 @@ jspecify was added to `build.gradle.kts` in Task 1 (`compileOnly("org.jspecify:j
 
 - [ ] **Step 5: Run codec tests, expect pass**
 
-Run: `./gradlew test --tests 'dev.jlo.preferences.codec.BuiltInCodecsTest' --console=plain`
+Run: `./gradlew test --tests 'dev.mintychochip.preferences.codec.BuiltInCodecsTest' --console=plain`
 Expected: PASS (8 tests). Adapter tests need `DialogResponseView` — that is a Paper interface with no public constructor; skip its unit test here and cover `parseResponse` in Task 8's smoke test. If Step 5 of Task 1 showed headless dialog construction works, optionally assert `checkbox().buildInput(...)` returns non-null.
 
 - [ ] **Step 6: Commit**
@@ -589,7 +589,7 @@ git add -A && git commit -m "feat: codec layer with built-in storage codecs and 
 
 `src/test/java/dev/jlo/preferences/internal/YamlValueStoreTest.java`:
 ```java
-package dev.jlo.preferences.internal;
+package dev.mintychochip.preferences.internal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -650,7 +650,7 @@ class YamlValueStoreTest {
 
 `src/test/java/dev/jlo/preferences/internal/DebouncedFlusherTest.java`:
 ```java
-package dev.jlo.preferences.internal;
+package dev.mintychochip.preferences.internal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -702,14 +702,14 @@ class DebouncedFlusherTest {
 
 - [ ] **Step 2: Run tests, expect failure**
 
-Run: `./gradlew test --tests 'dev.jlo.preferences.internal.*' --console=plain`
+Run: `./gradlew test --tests 'dev.mintychochip.preferences.internal.*' --console=plain`
 Expected: FAIL — classes missing.
 
 - [ ] **Step 3: Implement**
 
 `internal/ValueStore.java` — marker SPI boundary (kept tiny so a custom-store SPI can grow here later):
 ```java
-package dev.jlo.preferences.internal;
+package dev.mintychochip.preferences.internal;
 
 /** Internal storage boundary. v1 has exactly one implementation (YamlValueStore). */
 public interface ValueStore {}
@@ -717,7 +717,7 @@ public interface ValueStore {}
 
 `internal/YamlValueStore.java`:
 ```java
-package dev.jlo.preferences.internal;
+package dev.mintychochip.preferences.internal;
 
 import java.io.IOException;
 import java.nio.file.AtomicMoveNotSupportedException;
@@ -852,7 +852,7 @@ public final class YamlValueStore implements ValueStore {
 
 `internal/FlushScheduler.java`:
 ```java
-package dev.jlo.preferences.internal;
+package dev.mintychochip.preferences.internal;
 
 /** Scheduler abstraction so the flusher is unit-testable without Bukkit. */
 public interface FlushScheduler {
@@ -863,7 +863,7 @@ public interface FlushScheduler {
 
 `internal/DebouncedFlusher.java`:
 ```java
-package dev.jlo.preferences.internal;
+package dev.mintychochip.preferences.internal;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -927,7 +927,7 @@ public class DebouncedFlusher {
 
 - [ ] **Step 4: Run tests, expect pass**
 
-Run: `./gradlew test --tests 'dev.jlo.preferences.internal.*' --console=plain`
+Run: `./gradlew test --tests 'dev.mintychochip.preferences.internal.*' --console=plain`
 Expected: PASS (6 tests).
 
 - [ ] **Step 5: Commit**
@@ -957,14 +957,14 @@ git add -A && git commit -m "feat: yaml value store + debounced async flusher"
 
 The registry's duplicate-key and lookup rules are testable without Bukkit by constructing registrations directly. `src/test/java/dev/jlo/preferences/internal/PreferenceRegistryTest.java`:
 ```java
-package dev.jlo.preferences.internal;
+package dev.mintychochip.preferences.internal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.jlo.preferences.api.PreferenceKey;
-import dev.jlo.preferences.api.PreferenceScope;
-import dev.jlo.preferences.api.codec.BuiltInCodecs;
-import dev.jlo.preferences.api.codec.PreferenceCodec;
+import dev.mintychochip.preferences.api.PreferenceKey;
+import dev.mintychochip.preferences.api.PreferenceScope;
+import dev.mintychochip.preferences.api.codec.BuiltInCodecs;
+import dev.mintychochip.preferences.api.codec.PreferenceCodec;
 import org.junit.jupiter.api.Test;
 
 class PreferenceRegistryTest {
@@ -1004,14 +1004,14 @@ class PreferenceRegistryTest {
 
 - [ ] **Step 2: Run, expect failure**
 
-Run: `./gradlew test --tests 'dev.jlo.preferences.internal.PreferenceRegistryTest' --console=plain`
+Run: `./gradlew test --tests 'dev.mintychochip.preferences.internal.PreferenceRegistryTest' --console=plain`
 Expected: FAIL — missing classes.
 
 - [ ] **Step 3: Implement**
 
 `api/PreferenceKey.java`:
 ```java
-package dev.jlo.preferences.api;
+package dev.mintychochip.preferences.api;
 
 public record PreferenceKey(String namespace, String name) {
     public PreferenceKey {
@@ -1025,7 +1025,7 @@ public record PreferenceKey(String namespace, String name) {
 
 `api/PreferenceChange.java`:
 ```java
-package dev.jlo.preferences.api;
+package dev.mintychochip.preferences.api;
 
 /** Payload for per-preference change callbacks. Values are stored-string form. */
 public record PreferenceChange(PreferenceKey key, String oldValue, String newValue) {}
@@ -1033,9 +1033,9 @@ public record PreferenceChange(PreferenceKey key, String oldValue, String newVal
 
 `api/event/PreferenceChangeEvent.java`:
 ```java
-package dev.jlo.preferences.api.event;
+package dev.mintychochip.preferences.api.event;
 
-import dev.jlo.preferences.api.PreferenceKey;
+import dev.mintychochip.preferences.api.PreferenceKey;
 import java.util.UUID;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
@@ -1075,14 +1075,14 @@ public class PreferenceChangeEvent extends Event implements Cancellable {
 
 `internal/RegisteredPreference.java`:
 ```java
-package dev.jlo.preferences.internal;
+package dev.mintychochip.preferences.internal;
 
-import dev.jlo.preferences.api.Preference;
-import dev.jlo.preferences.api.PreferenceChange;
-import dev.jlo.preferences.api.PreferenceKey;
-import dev.jlo.preferences.api.PreferenceScope;
-import dev.jlo.preferences.api.codec.PreferenceCodec;
-import dev.jlo.preferences.api.event.PreferenceChangeEvent;
+import dev.mintychochip.preferences.api.Preference;
+import dev.mintychochip.preferences.api.PreferenceChange;
+import dev.mintychochip.preferences.api.PreferenceKey;
+import dev.mintychochip.preferences.api.PreferenceScope;
+import dev.mintychochip.preferences.api.codec.PreferenceCodec;
+import dev.mintychochip.preferences.api.event.PreferenceChangeEvent;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -1210,7 +1210,7 @@ public final class RegisteredPreference<T> implements Preference<T> {
 
 `internal/PreferenceRegistry.java`:
 ```java
-package dev.jlo.preferences.internal;
+package dev.mintychochip.preferences.internal;
 
 import java.util.Collection;
 import java.util.Map;
@@ -1239,7 +1239,7 @@ public final class PreferenceRegistry {
 
 `api/Preference.java`:
 ```java
-package dev.jlo.preferences.api;
+package dev.mintychochip.preferences.api;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
@@ -1263,10 +1263,10 @@ public interface Preference<T> {
 
 `api/PreferenceBuilder.java`:
 ```java
-package dev.jlo.preferences.api;
+package dev.mintychochip.preferences.api;
 
-import dev.jlo.preferences.api.codec.PreferenceCodec;
-import dev.jlo.preferences.internal.RegisteredPreference;
+import dev.mintychochip.preferences.api.codec.PreferenceCodec;
+import dev.mintychochip.preferences.internal.RegisteredPreference;
 import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 
@@ -1307,10 +1307,10 @@ public final class PreferenceBuilder<T> {
 
 `api/PreferencesService.java`:
 ```java
-package dev.jlo.preferences.api;
+package dev.mintychochip.preferences.api;
 
-import dev.jlo.preferences.internal.PreferenceRegistry;
-import dev.jlo.preferences.internal.RegisteredPreference;
+import dev.mintychochip.preferences.internal.PreferenceRegistry;
+import dev.mintychochip.preferences.internal.RegisteredPreference;
 import java.util.Collection;
 import java.util.function.Consumer;
 import org.bukkit.plugin.Plugin;
@@ -1343,7 +1343,7 @@ NOTE on the lookup-key sentinel strings (`\u0000` separators): the plugin wiring
 
 - [ ] **Step 4: Run tests, expect pass**
 
-Run: `./gradlew test --tests 'dev.jlo.preferences.internal.PreferenceRegistryTest' --console=plain`
+Run: `./gradlew test --tests 'dev.mintychochip.preferences.internal.PreferenceRegistryTest' --console=plain`
 Expected: PASS (3 tests).
 
 - [ ] **Step 5: Commit**
@@ -1369,11 +1369,11 @@ git add -A && git commit -m "feat: preference registry, typed handles, change ev
 
 `src/test/java/dev/jlo/preferences/internal/session/DialogSessionManagerTest.java`:
 ```java
-package dev.jlo.preferences.internal.session;
+package dev.mintychochip.preferences.internal.session;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.jlo.preferences.api.PreferenceKey;
+import dev.mintychochip.preferences.api.PreferenceKey;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -1417,9 +1417,9 @@ class DialogSessionManagerTest {
 
 `internal/session/DialogSession.java`:
 ```java
-package dev.jlo.preferences.internal.session;
+package dev.mintychochip.preferences.internal.session;
 
-import dev.jlo.preferences.api.PreferenceKey;
+import dev.mintychochip.preferences.api.PreferenceKey;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
@@ -1430,7 +1430,7 @@ public record DialogSession(UUID player, Kind kind, int page, @Nullable Preferen
 
 `internal/session/DialogSessionManager.java`:
 ```java
-package dev.jlo.preferences.internal.session;
+package dev.mintychochip.preferences.internal.session;
 
 import java.util.Map;
 import java.util.UUID;
@@ -1457,7 +1457,7 @@ public final class DialogSessionManager {
 
 - [ ] **Step 4: Run tests, expect pass**
 
-Run: `./gradlew test --tests 'dev.jlo.preferences.internal.session.*' --console=plain`
+Run: `./gradlew test --tests 'dev.mintychochip.preferences.internal.session.*' --console=plain`
 Expected: PASS (4 tests).
 
 - [ ] **Step 5: Commit**
@@ -1482,13 +1482,13 @@ git add -A && git commit -m "feat: dialog session manager with single-slot sessi
 
 `internal/dialog/DialogScreens.java`:
 ```java
-package dev.jlo.preferences.internal.dialog;
+package dev.mintychochip.preferences.internal.dialog;
 
-import dev.jlo.preferences.api.PreferenceScope;
-import dev.jlo.preferences.internal.PreferenceRegistry;
-import dev.jlo.preferences.internal.RegisteredPreference;
-import dev.jlo.preferences.internal.session.DialogSession;
-import dev.jlo.preferences.internal.session.DialogSessionManager;
+import dev.mintychochip.preferences.api.PreferenceScope;
+import dev.mintychochip.preferences.internal.PreferenceRegistry;
+import dev.mintychochip.preferences.internal.RegisteredPreference;
+import dev.mintychochip.preferences.internal.session.DialogSession;
+import dev.mintychochip.preferences.internal.session.DialogSessionManager;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
@@ -1595,12 +1595,12 @@ public final class DialogScreens {
 
 `internal/dialog/ClickRouter.java`:
 ```java
-package dev.jlo.preferences.internal.dialog;
+package dev.mintychochip.preferences.internal.dialog;
 
-import dev.jlo.preferences.internal.PreferenceRegistry;
-import dev.jlo.preferences.internal.RegisteredPreference;
-import dev.jlo.preferences.internal.session.DialogSession;
-import dev.jlo.preferences.internal.session.DialogSessionManager;
+import dev.mintychochip.preferences.internal.PreferenceRegistry;
+import dev.mintychochip.preferences.internal.RegisteredPreference;
+import dev.mintychochip.preferences.internal.session.DialogSession;
+import dev.mintychochip.preferences.internal.session.DialogSessionManager;
 import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.event.player.PlayerCustomClickEvent;
 import java.util.Locale;
@@ -1664,8 +1664,8 @@ public final class ClickRouter implements Listener {
 
         var scopePrefs = registry.all().stream()
             .filter(p -> p.scope() == (session.kind() == DialogSession.Kind.GLOBAL_LIST
-                ? dev.jlo.preferences.api.PreferenceScope.GLOBAL
-                : dev.jlo.preferences.api.PreferenceScope.PLAYER))
+                ? dev.mintychochip.preferences.api.PreferenceScope.GLOBAL
+                : dev.mintychochip.preferences.api.PreferenceScope.PLAYER))
             .sorted(java.util.Comparator.comparing(p -> p.key().asString()))
             .toList();
         int absolute = session.page() * DialogScreens.PAGE_SIZE + index;
@@ -1695,16 +1695,16 @@ public final class ClickRouter implements Listener {
             screens.showEdit(player, pref, returnPage);
             return;
         }
-        if (pref.scope() == dev.jlo.preferences.api.PreferenceScope.GLOBAL
+        if (pref.scope() == dev.mintychochip.preferences.api.PreferenceScope.GLOBAL
                 && !player.hasPermission("preferences.manage")) {
             player.sendMessage(Component.text("You don't have permission to change server preferences.", NamedTextColor.RED));
             return;
         }
-        if (pref.scope() == dev.jlo.preferences.api.PreferenceScope.GLOBAL) pref.setGlobal(parsed);
+        if (pref.scope() == dev.mintychochip.preferences.api.PreferenceScope.GLOBAL) pref.setGlobal(parsed);
         else pref.set(player, parsed);
         player.sendMessage(Component.text("Saved ", NamedTextColor.GREEN)
             .append(pref.label()).append(Component.text(".", NamedTextColor.GREEN)));
-        if (pref.scope() == dev.jlo.preferences.api.PreferenceScope.GLOBAL) {
+        if (pref.scope() == dev.mintychochip.preferences.api.PreferenceScope.GLOBAL) {
             screens.showGlobalList(player, returnPage);
         } else {
             screens.showPlayerList(player, returnPage);
@@ -1747,9 +1747,9 @@ git add -A && git commit -m "feat: dialog screens and session-validated click ro
 
 `internal/command/PreferencesCommand.java`:
 ```java
-package dev.jlo.preferences.internal.command;
+package dev.mintychochip.preferences.internal.command;
 
-import dev.jlo.preferences.internal.dialog.DialogScreens;
+import dev.mintychochip.preferences.internal.dialog.DialogScreens;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -1800,18 +1800,18 @@ public final class PreferencesCommand implements TabExecutor {
 
 `PreferencesPlugin.java`:
 ```java
-package dev.jlo.preferences;
+package dev.mintychochip.preferences;
 
-import dev.jlo.preferences.api.PreferencesService;
-import dev.jlo.preferences.internal.DebouncedFlusher;
-import dev.jlo.preferences.internal.FlushScheduler;
-import dev.jlo.preferences.internal.PreferenceRegistry;
-import dev.jlo.preferences.internal.RegisteredPreference;
-import dev.jlo.preferences.internal.YamlValueStore;
-import dev.jlo.preferences.internal.command.PreferencesCommand;
-import dev.jlo.preferences.internal.dialog.ClickRouter;
-import dev.jlo.preferences.internal.dialog.DialogScreens;
-import dev.jlo.preferences.internal.session.DialogSessionManager;
+import dev.mintychochip.preferences.api.PreferencesService;
+import dev.mintychochip.preferences.internal.DebouncedFlusher;
+import dev.mintychochip.preferences.internal.FlushScheduler;
+import dev.mintychochip.preferences.internal.PreferenceRegistry;
+import dev.mintychochip.preferences.internal.RegisteredPreference;
+import dev.mintychochip.preferences.internal.YamlValueStore;
+import dev.mintychochip.preferences.internal.command.PreferencesCommand;
+import dev.mintychochip.preferences.internal.dialog.ClickRouter;
+import dev.mintychochip.preferences.internal.dialog.DialogScreens;
+import dev.mintychochip.preferences.internal.session.DialogSessionManager;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -1946,7 +1946,7 @@ Replace `src/main/resources/plugin.yml` with:
 ```yaml
 name: Preferences
 version: '0.1.0'
-main: dev.jlo.preferences.PreferencesPlugin
+main: dev.mintychochip.preferences.PreferencesPlugin
 api-version: '1.21'
 description: Typed preferences with dialog GUI, owned by this plugin.
 commands:
@@ -2003,18 +2003,18 @@ git add -A && git commit -m "feat: command, permissions, plugin wiring with asyn
 ```yaml
 name: PreferencesDemo
 version: '0.1.0'
-main: dev.jlo.preferences.demo.DemoPlugin
+main: dev.mintychochip.preferences.demo.DemoPlugin
 api-version: '1.21'
 depend: [Preferences]
 ```
 
 `demo/src/main/java/dev/jlo/preferences/demo/DemoPlugin.java`:
 ```java
-package dev.jlo.preferences.demo;
+package dev.mintychochip.preferences.demo;
 
-import dev.jlo.preferences.api.Preference;
-import dev.jlo.preferences.api.PreferencesService;
-import dev.jlo.preferences.api.codec.PreferenceCodec;
+import dev.mintychochip.preferences.api.Preference;
+import dev.mintychochip.preferences.api.PreferencesService;
+import dev.mintychochip.preferences.api.codec.PreferenceCodec;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;

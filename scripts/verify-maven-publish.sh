@@ -15,10 +15,10 @@ echo "==> Publishing :api to mavenLocal"
 ./gradlew --no-daemon :api:publishToMavenLocal
 
 # Locate the published jar under the user's local Maven repo.
-GROUP_PATH="dev/jlo/preferences-api"
+GROUP_PATH="dev/mintychochip/preferences-api"
 VERSION="$(grep -E '^\s*version\s*=' build.gradle.kts | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
 if [[ -z "$VERSION" ]]; then
-  VERSION="0.1.0-SNAPSHOT"
+  VERSION="0.2.0"
 fi
 M2="${HOME}/.m2/repository/${GROUP_PATH}/${VERSION}"
 JAR="${M2}/preferences-api-${VERSION}.jar"
@@ -49,7 +49,7 @@ repositories {
 
 dependencies {
     // Real published coordinate — NOT project(":api")
-    implementation("dev.jlo:preferences-api:${VERSION}")
+    implementation("dev.mintychochip:preferences-api:${VERSION}")
     compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
 }
 
@@ -72,9 +72,9 @@ EOF
 cat >"$CONSUMER/src/main/java/consume/Main.java" <<'EOF'
 package consume;
 
-import dev.jlo.preferences.api.PreferenceKey;
-import dev.jlo.preferences.api.codec.BuiltInCodecs;
-import dev.jlo.preferences.api.codec.StorageCodec;
+import dev.mintychochip.preferences.api.PreferenceKey;
+import dev.mintychochip.preferences.api.codec.BuiltInCodecs;
+import dev.mintychochip.preferences.api.codec.StorageCodec;
 
 /**
  * Consumer of the *published* preferences-api jar. If this compiles and runs,
@@ -119,4 +119,4 @@ EOF
 # Use the same Gradle wrapper from the main project so we don't depend on a system install.
 (cd "$CONSUMER" && "$ROOT/gradlew" --no-daemon -p "$CONSUMER" runConsumer --stacktrace)
 
-echo "==> verify-maven-publish: SUCCESS (published + consumed dev.jlo:preferences-api:${VERSION})"
+echo "==> verify-maven-publish: SUCCESS (published + consumed dev.mintychochip:preferences-api:${VERSION})"

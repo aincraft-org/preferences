@@ -42,7 +42,7 @@ publishing {
             pom {
                 name.set("Preferences")
                 description.set("Paper plugin: typed preferences with dialog GUI and YAML persistence.")
-                url.set("https://github.com/mintychochip/Preferences")
+                url.set("https://github.com/aincraft-org/preferences")
             }
         }
     }
@@ -50,7 +50,7 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/mintychochip/Preferences")
+            url = uri("https://maven.pkg.github.com/aincraft-org/preferences")
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
                     ?: (project.findProperty("gpr.user") as String?)

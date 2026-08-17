@@ -1,7 +1,7 @@
 # Preferences — Usage Guide
 
 Paper **1.21.7+** plugin: other plugins declare typed preferences; this plugin provides
-the dialog GUI, state management, and YAML persistence for them. **v0.1.0.**
+the dialog GUI, state management, and YAML persistence for them. **v0.2.0.**
 
 This file is the usage guide for AGENTS.md.
 
@@ -24,7 +24,7 @@ This file is the usage guide for AGENTS.md.
 
 ### Install
 
-1. Drop `preferences-0.1.0.jar` into `plugins/`.
+1. Drop `preferences-0.2.0.jar` into `plugins/`.
 2. Restart the server (or `/reload`).
 3. Done — hooking plugins register their preferences at their own enable time.
 
@@ -95,7 +95,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("dev.jlo:preferences-api:0.1.0")
+    compileOnly("dev.mintychochip:preferences-api:0.2.0")
     compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
 }
 ```
@@ -195,7 +195,7 @@ Or the per-preference callback: `b.onChange(c -> ...)` with `PreferenceChange(ke
 
 ### 7. Don't do this
 
-- Never import `dev.jlo.preferences.internal.*` — it is not part of the stable API.
+- Never import `dev.mintychochip.preferences.internal.*` — it is not part of the stable API.
 - Don't hand-edit `plugins/Preferences/data/*.yml` while the server runs — a later flush
   overwrites it. Stop the server first.
 - Don't bake the dialog `inputKey` — dialog input keys follow vanilla

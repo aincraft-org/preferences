@@ -6,9 +6,9 @@ Paper **1.21.7+** plugin that lets other plugins declare typed preferences and g
 
 | Module | Artifact | Role |
 |--------|----------|------|
-| `api` | `dev.jlo:preferences-api` | Public registration surface for hooking plugins |
+| `api` | `dev.mintychochip:preferences-api` | Public registration surface for hooking plugins |
 | `common` | (internal) | Registry, storage, flusher, sessions |
-| `paper` | `dev.jlo:preferences` | Shippable Preferences plugin jar (embeds api + common) |
+| `paper` | `dev.mintychochip:preferences` | Shippable Preferences plugin jar (embeds api + common) |
 | `test` | — | Fixture plugin + jpenilla `runServer` (CI must package this) |
 
 ## Build
@@ -38,7 +38,7 @@ Publish the API to your machine (or use GitHub Packages — see below):
 ### Coordinate
 
 ```
-dev.jlo:preferences-api:0.1.0
+dev.mintychochip:preferences-api:0.2.0
 ```
 
 ### Gradle (consumer)
@@ -48,7 +48,7 @@ repositories {
     mavenLocal() // after publishToMavenLocal
     // GitHub Packages (auth required even for public packages):
     maven {
-        url = uri("https://maven.pkg.github.com/mintychochip/Preferences")
+        url = uri("https://maven.pkg.github.com/aincraft-org/preferences")
         credentials {
             username = project.findProperty("gpr.user") as String?
                 ?: System.getenv("GITHUB_ACTOR")
@@ -60,7 +60,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("dev.jlo:preferences-api:0.1.0")
+    compileOnly("dev.mintychochip:preferences-api:0.2.0")
     compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
 }
 ```
@@ -71,14 +71,14 @@ dependencies {
 <repositories>
   <repository>
     <id>github</id>
-    <url>https://maven.pkg.github.com/mintychochip/Preferences</url>
+    <url>https://maven.pkg.github.com/aincraft-org/preferences</url>
   </repository>
 </repositories>
 
 <dependency>
-  <groupId>dev.jlo</groupId>
+  <groupId>dev.mintychochip</groupId>
   <artifactId>preferences-api</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <scope>provided</scope>
 </dependency>
 ```
@@ -100,7 +100,7 @@ Preference<Boolean> notifications = prefs.register(this, Boolean.class, b -> b
     .defaultValue(true));
 ```
 
-Import only `dev.jlo.preferences.api.*` — never `dev.jlo.preferences.internal`.
+Import only `dev.mintychochip.preferences.api.*` — never `dev.mintychochip.preferences.internal`.
 
 ## Publishing (maintainers)
 

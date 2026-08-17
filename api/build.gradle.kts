@@ -13,7 +13,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-// Stable Maven coordinate for hooking plugins: dev.jlo:preferences-api:<version>
+// Stable Maven coordinate for hooking plugins: dev.mintychochip:preferences-api:<version>
 tasks.jar {
     archiveBaseName.set("preferences-api")
 }
@@ -31,7 +31,7 @@ publishing {
                 description.set(
                     "Public typed-preferences API for Paper plugins (register via PreferencesService).",
                 )
-                url.set("https://github.com/mintychochip/Preferences")
+                url.set("https://github.com/aincraft-org/preferences")
                 licenses {
                     license {
                         name.set("All Rights Reserved")
@@ -44,9 +44,9 @@ publishing {
                     }
                 }
                 scm {
-                    url.set("https://github.com/mintychochip/Preferences")
-                    connection.set("scm:git:https://github.com/mintychochip/Preferences.git")
-                    developerConnection.set("scm:git:https://github.com/mintychochip/Preferences.git")
+                    url.set("https://github.com/aincraft-org/preferences")
+                    connection.set("scm:git:https://github.com/aincraft-org/preferences.git")
+                    developerConnection.set("scm:git:https://github.com/aincraft-org/preferences.git")
                 }
             }
         }
@@ -57,7 +57,7 @@ publishing {
         // GitHub Packages: GITHUB_ACTOR + GITHUB_TOKEN (needs write:packages)
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/mintychochip/Preferences")
+            url = uri("https://maven.pkg.github.com/aincraft-org/preferences")
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
                     ?: (project.findProperty("gpr.user") as String?)
