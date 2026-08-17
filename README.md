@@ -1,52 +1,35 @@
 # Preferences
 
-Paper **1.21.7+** plugin that lets other plugins declare typed preferences and get dialog-based GUI, state management, and YAML persistence for free.
+![CI](https://github.com/aincraft-org/preferences/actions/workflows/ci.yml/badge.svg)
 
-## Modules
+Paper **1.21.7+** plugin that lets other plugins declare typed preferences and get a native dialog GUI, state management, and YAML persistence for free.
 
-| Module | Artifact | Role |
-|--------|----------|------|
-| `api` | `dev.mintychochip:preferences-api` | Public registration surface for hooking plugins |
-| `common` | (internal) | Registry, storage, flusher, sessions |
-| `paper` | `dev.mintychochip:preferences` | Shippable Preferences plugin jar (embeds api + common) |
-| `test` | — | Fixture plugin + jpenilla `runServer` (CI must package this) |
+## What it is
 
-## Build
+- **Hooking plugins** register typed preferences (booleans, numbers, enums, text, etc.) with a small builder.
+- **Players** edit their own values with `/preferences`; admins edit server-wide values with `/preferences global`.
+- **The Preferences plugin** owns the dialogs, validation, caching, permission checks, and debounced YAML persistence.
 
-```bash
-./gradlew :api:build :common:build :paper:build :test:build test
-# or
-./gradlew ci
-```
+## Requirements
 
-Local integration server (loads Preferences + PreferencesTest):
+- Paper 1.21.7+
+- Java 21
 
-```bash
-./gradlew :test:runServer
-```
+## Install
 
-## Maven / Gradle (hooking plugins)
+1. Download `paper/build/libs/preferences-0.2.0.jar` (or publish it locally).
+2. Drop it in your server's `plugins/` directory.
+3. Restart; hooking plugins will register their preferences at enable time.
 
-Publish the API to your machine (or use GitHub Packages — see below):
+For full admin docs (commands, permissions, configuration) see [`AGENTS.md`](AGENTS.md).
 
-```bash
-./gradlew :api:publishToMavenLocal
-# optional plugin jar:
-./gradlew :paper:publishToMavenLocal
-```
+## Quickstart (plugin developers)
 
-### Coordinate
-
-```
-dev.mintychochip:preferences-api:0.2.0
-```
-
-### Gradle (consumer)
+### 1. Add the API
 
 ```kotlin
 repositories {
-    mavenLocal() // after publishToMavenLocal
-    // GitHub Packages (auth required even for public packages):
+    mavenLocal() // after :api:publishToMavenLocal
     maven {
         url = uri("https://maven.pkg.github.com/aincraft-org/preferences")
         credentials {
@@ -65,16 +48,9 @@ dependencies {
 }
 ```
 
-### Maven (consumer)
+Maven:
 
 ```xml
-<repositories>
-  <repository>
-    <id>github</id>
-    <url>https://maven.pkg.github.com/aincraft-org/preferences</url>
-  </repository>
-</repositories>
-
 <dependency>
   <groupId>dev.mintychochip</groupId>
   <artifactId>preferences-api</artifactId>
@@ -83,41 +59,89 @@ dependencies {
 </dependency>
 ```
 
-For GitHub Packages, put a PAT with `read:packages` in `~/.m2/settings.xml` under server id `github` (or export `GITHUB_TOKEN` for Gradle).
-
-### Runtime
-
-1. Install the Preferences plugin jar (`paper` module output) on the server.
-2. Declare `depend: [Preferences]` (or soft-depend) in your `plugin.yml`.
-3. Load the service and register preferences:
+### 2. Register a preference
 
 ```java
-PreferencesService prefs = Bukkit.getServicesManager().load(PreferencesService.class);
+PreferencesService prefs = Bukkit.getServicesManager()
+    .load(PreferencesService.class);
+
 Preference<Boolean> notifications = prefs.register(this, Boolean.class, b -> b
     .playerScoped("notifications")
     .label(Component.text("Notifications"))
+    .description(Component.text("Receive notifications"))
     .codec(PreferenceCodec.booleanBox())
     .defaultValue(true));
+
+boolean enabled = notifications.get(player);
+notifications.set(player, false);
 ```
 
-Import only `dev.mintychochip.preferences.api.*` — never `dev.mintychochip.preferences.internal`.
+Import only `dev.mintychochip.preferences.api.*` — never `dev.mintychochip.preferences.internal.*`.
+
+## Built-in types
+
+| Factory | Java type | Dialog control |
+|---|---|---|
+| `PreferenceCodec.string(maxLength)` | `String` | Text field |
+| `PreferenceCodec.booleanBox()` | `Boolean` | Checkbox |
+| `PreferenceCodec.integerSlider(min, max, step)` | `Integer` | Slider |
+| `PreferenceCodec.longSlider(min, max, step)` | `Long` | Slider |
+| `PreferenceCodec.floatSlider(min, max, step)` | `Float` | Slider |
+| `PreferenceCodec.doubleSlider(min, max, step)` | `Double` | Slider |
+| `PreferenceCodec.enumerated(...)` | enum | Option picker |
+
+Custom types: implement `StorageCodec<T>` (and optionally `DialogInputAdapter<T>`).
+
+## Scopes & events
+
+- **Player-scoped**: one value per player, editable by that player via `/preferences`.
+- **Global**: one value per server, editable by players with `preferences.manage` (default: op) via `/preferences global`.
+- `PreferenceChangeEvent` is fired before persistence and can be cancelled.
+
+## Configuration
+
+`plugins/Preferences/config.yml`:
+
+```yaml
+storage:
+  flush-seconds: 5
+
+gui:
+  page-size: 20
+```
+
+## Build & test
+
+```bash
+./gradlew :api:build :common:build :paper:build :test:build test
+./gradlew :test:runServer   # local integration server
+```
+
+Prove the full publish path (Maven Local + real consumer resolve):
+
+```bash
+./scripts/verify-maven-publish.sh
+```
+
+## Modules
+
+| Module | Artifact | Role |
+|---|---|---|
+| `api` | `dev.mintychochip:preferences-api` | Public registration surface for hooking plugins |
+| `common` | (internal) | Registry, storage, flusher, sessions |
+| `paper` | `dev.mintychochip:preferences` | Shippable Preferences plugin jar (embeds api + common) |
+| `test` | — | Fixture plugin + jpenilla `runServer` |
 
 ## Publishing (maintainers)
 
 ```bash
-# Local Maven repo (always available)
+# Local Maven repo
 ./gradlew :api:publishToMavenLocal :paper:publishToMavenLocal
 
 # GitHub Packages (needs write:packages)
 export GITHUB_ACTOR=mintychochip
-export GITHUB_TOKEN=ghp_...   # classic PAT with write:packages, read:packages, repo
+export GITHUB_TOKEN=ghp_...   # PAT with write:packages, read:packages, repo
 ./gradlew :api:publish :paper:publish
-```
-
-Verify the publish path without GitHub credentials:
-
-```bash
-./scripts/verify-maven-publish.sh
 ```
 
 ## CI
@@ -126,7 +150,7 @@ GitHub Actions (`.github/workflows/ci.yml`) on `master` / PRs:
 
 - Builds `:api`, `:common`, `:paper`, and **`:test`**
 - Runs unit tests
-- Runs `scripts/verify-maven-publish.sh` (publishToMavenLocal + isolated consumer)
+- Runs `scripts/verify-maven-publish.sh`
 
 ## License
 
