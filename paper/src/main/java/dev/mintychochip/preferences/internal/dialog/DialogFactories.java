@@ -62,9 +62,8 @@ public final class DialogFactories {
     }
 
     /** PROBE RESULT: SingleOptionDialogInput.OptionEntry has no `of` factory.
-     *  Verified against paper-api 1.21.7-R0.1-SNAPSHOT bytecode: the only
-     *  factory is `create(String id, Component display, boolean initial)`
-     *  (same arity/types as the original probe). Fixed here. */
+     *  Verified against paper-api 26.2: the only factory is
+     *  `create(String id, Component display, boolean initial)`. */
     public static SingleOptionDialogInput.OptionEntry optionEntry(String id, Component display, boolean initial) {
         return SingleOptionDialogInput.OptionEntry.create(id, display, initial);
     }

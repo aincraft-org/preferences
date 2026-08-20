@@ -1,7 +1,7 @@
 name: Preferences
 version: '0.2.0'
 main: dev.mintychochip.preferences.PreferencesPlugin
-api-version: '1.21'
+api-version: '26.2'
 description: Typed preferences with dialog GUI, owned by this plugin.
 commands:
   preferences:

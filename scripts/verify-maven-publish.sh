@@ -50,17 +50,17 @@ repositories {
 dependencies {
     // Real published coordinate — NOT project(":api")
     implementation("dev.mintychochip:preferences-api:${VERSION}")
-    compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
 }
 
 java {
     toolchain {
-        // Prefer installed JDK; release 21 for bytecode.
+        // Prefer installed JDK; release 25 for bytecode.
     }
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.release = 21
+    options.release = 25
 }
 
 tasks.register<JavaExec>("runConsumer") {

@@ -2,7 +2,7 @@
 
 ![CI](https://github.com/aincraft-org/preferences/actions/workflows/ci.yml/badge.svg)
 
-Paper **1.21.7+** plugin that lets other plugins declare typed preferences and get a native dialog GUI, state management, and YAML persistence for free.
+Paper **26.2+** plugin that lets other plugins declare typed preferences and get a native dialog GUI, state management, and YAML persistence for free.
 
 ## What it is
 
@@ -12,8 +12,8 @@ Paper **1.21.7+** plugin that lets other plugins declare typed preferences and g
 
 ## Requirements
 
-- Paper 1.21.7+
-- Java 21
+- Paper 26.2+
+- Java 25
 
 ## Install
 
@@ -44,7 +44,7 @@ repositories {
 
 dependencies {
     compileOnly("dev.mintychochip:preferences-api:0.2.0")
-    compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
 }
 ```
 

@@ -20,7 +20,7 @@ subprojects {
     }
 
     tasks.withType<JavaCompile>().configureEach {
-        options.release = 21
+        options.release = 25
         options.encoding = "UTF-8"
     }
 

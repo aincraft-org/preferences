@@ -1,6 +1,6 @@
 # Preferences — Usage Guide
 
-Paper **1.21.7+** plugin: other plugins declare typed preferences; this plugin provides
+Paper **26.2+** plugin: other plugins declare typed preferences; this plugin provides
 the dialog GUI, state management, and YAML persistence for them. **v0.2.0.**
 
 This file is the usage guide for AGENTS.md.
@@ -35,7 +35,7 @@ This file is the usage guide for AGENTS.md.
 | `/preferences` (alias `/prefs`) | `preferences.use` (default: everyone) | Open your own preference dialog |
 | `/preferences global` | `preferences.manage` (default: op) | View/edit server-global preferences |
 
-Dialogs are Paper 1.21.7 native dialogs. Non-players get a message that preferences
+Dialogs are Paper native dialogs. Non-players get a message that preferences
 are edited in-game.
 
 ### Permissions
@@ -96,7 +96,7 @@ repositories {
 
 dependencies {
     compileOnly("dev.mintychochip:preferences-api:0.2.0")
-    compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
 }
 ```
 
@@ -231,7 +231,7 @@ players:
 
 ```bash
 ./gradlew :api:build :common:build :paper:build :test:build test   # CI-equivalent
-./gradlew :test:runServer                                          # local Paper 1.21.7 smoke server
+./gradlew :test:runServer                                          # local Paper 26.2 smoke server
 ./scripts/verify-maven-publish.sh                                  # prove the publish path
 ```
 

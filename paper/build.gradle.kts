@@ -5,7 +5,7 @@ plugins {
 dependencies {
     implementation(project(":common"))
 
-    compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
     compileOnly("org.jspecify:jspecify:1.0.0")
 }
 
