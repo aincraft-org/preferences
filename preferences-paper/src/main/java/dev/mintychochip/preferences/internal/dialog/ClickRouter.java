@@ -63,7 +63,7 @@ public final class ClickRouter implements Listener {
             case "list_prev" -> navigate(player, session, session.page() - 1);
             case "list_next" -> navigate(player, session, session.page() + 1);
             default -> {
-                if (path.startsWith("edit/") && session.kind() != DialogSession.Kind.EDIT) {
+                if (path.startsWith("edit/") && session.screen() != DialogSession.Screen.EDIT) {
                     openEditByIndex(player, session, path.substring("edit/".length()));
                 }
             }
@@ -71,29 +71,26 @@ public final class ClickRouter implements Listener {
     }
 
     private void navigate(Player player, DialogSession session, int newPage) {
-        switch (session.kind()) {
-            case PLAYER_LIST -> {
-                if (!player.hasPermission("preferences.use")) {
-                    denyAndClose(player, PreferenceScope.PLAYER);
-                    return;
-                }
-                screens.showPlayerList(player, newPage);
+        if (session.screen() != DialogSession.Screen.PLUGIN_LIST) {
+            return; // nav buttons never appear in edit dialogs
+        }
+        if (session.scope() == PreferenceScope.PLAYER) {
+            if (!player.hasPermission("preferences.use")) {
+                denyAndClose(player, PreferenceScope.PLAYER);
+                return;
             }
-            case GLOBAL_LIST -> {
-                if (!player.hasPermission("preferences.manage")) {
-                    denyAndClose(player, PreferenceScope.GLOBAL);
-                    return;
-                }
-                screens.showGlobalList(player, newPage);
+            screens.showPlayerList(player, newPage);
+        } else {
+            if (!player.hasPermission("preferences.manage")) {
+                denyAndClose(player, PreferenceScope.GLOBAL);
+                return;
             }
-            case EDIT -> {} // nav buttons never appear in edit dialogs
+            screens.showGlobalList(player, newPage);
         }
     }
 
     private void openEditByIndex(Player player, DialogSession session, String indexStr) {
-        PreferenceScope scope = session.kind() == DialogSession.Kind.GLOBAL_LIST
-            ? PreferenceScope.GLOBAL
-            : PreferenceScope.PLAYER;
+        PreferenceScope scope = session.scope();
         if (!mayEdit(player, scope)) {
             denyAndClose(player, scope);
             return;
@@ -121,10 +118,11 @@ public final class ClickRouter implements Listener {
     }
 
     private void handleSave(Player player, DialogSession session, @Nullable DialogResponseView view) {
-        if (session.kind() != DialogSession.Kind.EDIT || session.target() == null) return;
-        RegisteredPreference<?> pref = registry.byKey(session.target());
+        if (session.screen() != DialogSession.Screen.EDIT || session.editTarget() == null) return;
+        RegisteredPreference<?> pref = registry.byKey(session.editTarget());
         if (pref == null) return;
-        saveTyped(player, cast(pref), view, session.page());
+        int returnPage = session.parent() != null ? session.parent().page() : session.page();
+        saveTyped(player, cast(pref), view, returnPage);
     }
 
     private <T> void saveTyped(Player player, RegisteredPreference<T> pref,

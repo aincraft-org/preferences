@@ -35,14 +35,14 @@ public final class DialogScreens {
     }
 
     public void showPlayerList(Player player, int page) {
-        showList(player, PreferenceScope.PLAYER, page, DialogSession.Kind.PLAYER_LIST);
+        showList(player, PreferenceScope.PLAYER, page);
     }
 
     public void showGlobalList(Player player, int page) {
-        showList(player, PreferenceScope.GLOBAL, page, DialogSession.Kind.GLOBAL_LIST);
+        showList(player, PreferenceScope.GLOBAL, page);
     }
 
-    private void showList(Player player, PreferenceScope scope, int page, DialogSession.Kind kind) {
+    private void showList(Player player, PreferenceScope scope, int page) {
         List<RegisteredPreference<?>> prefs = registry.all().stream()
             .filter(p -> p.scope() == scope)
             .sorted(Comparator.comparing(p -> p.key().asString()))
@@ -91,7 +91,17 @@ public final class DialogScreens {
                 .build());
         }
 
-        sessions.open(new DialogSession(player.getUniqueId(), kind, clampedPage, null));
+        sessions.open(new DialogSession(
+            player.getUniqueId(),
+            DialogSession.Screen.PLUGIN_LIST,
+            scope,
+            clampedPage,
+            null,
+            null,
+            null,
+            null,
+            slice.stream().map(RegisteredPreference::key).toList(),
+            List.of()));
         Dialog dialog = DialogFactories.multiAction(
             Component.text(scope == PreferenceScope.GLOBAL ? "Server Preferences" : "Your Preferences"),
             withNav,
@@ -117,15 +127,31 @@ public final class DialogScreens {
             Dialog dialog = DialogFactories.notice(pref.label(), List.of(
                 DialogBody.plainMessage(pref.description()),
                 DialogBody.plainMessage(Component.text("Current: " + pref.codec().storage().write(cast(value))))));
-            sessions.open(new DialogSession(player.getUniqueId(), DialogSession.Kind.EDIT, returnPage, pref.key()));
+            openEditSession(player, pref, returnPage);
             player.showDialog(dialog);
             return;
         }
         T current = pref.scope() == PreferenceScope.GLOBAL ? pref.getGlobal() : pref.get(player);
         var input = adapter.buildInput("value", pref.label(), current);
         Dialog dialog = DialogFactories.editDialog(pref.label(), List.of(pref.description()), input);
-        sessions.open(new DialogSession(player.getUniqueId(), DialogSession.Kind.EDIT, returnPage, pref.key()));
+        openEditSession(player, pref, returnPage);
         player.showDialog(dialog);
+    }
+
+    private void openEditSession(Player player, RegisteredPreference<?> pref, int returnPage) {
+        var parent = new DialogSession.ParentContext(
+            DialogSession.Screen.PLUGIN_LIST, pref.scope(), null, null, returnPage);
+        sessions.open(new DialogSession(
+            player.getUniqueId(),
+            DialogSession.Screen.EDIT,
+            pref.scope(),
+            returnPage,
+            null,
+            null,
+            pref.key(),
+            parent,
+            List.of(),
+            List.of()));
     }
 
     public int pageSize() {
