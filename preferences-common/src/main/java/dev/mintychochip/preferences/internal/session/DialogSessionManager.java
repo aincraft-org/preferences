@@ -23,16 +23,16 @@ public final class DialogSessionManager {
         sessions.remove(Objects.requireNonNull(player, "player"));
     }
 
-    public boolean matches(UUID player, DialogSession.Kind kind) {
+    public boolean matches(UUID player, DialogSession.Screen screen) {
         Objects.requireNonNull(player, "player");
-        Objects.requireNonNull(kind, "kind");
+        Objects.requireNonNull(screen, "screen");
         DialogSession s = sessions.get(player);
-        return s != null && s.kind() == kind;
+        return s != null && s.screen() == screen;
     }
 
     /** Closes sessions targeting any preference in the given namespace (plugin disable). */
     public void closeForNamespace(String namespace) {
         Objects.requireNonNull(namespace, "namespace");
-        sessions.values().removeIf(s -> s.target() != null && s.target().namespace().equals(namespace));
+        sessions.values().removeIf(s -> s.editTarget() != null && s.editTarget().namespace().equals(namespace));
     }
 }
