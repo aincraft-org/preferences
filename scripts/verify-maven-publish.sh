@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Prove the real publish path: publish API to mavenLocal, then resolve that
-# coordinate from a separate consumer project (not project(":api")) and exercise
+# coordinate from a separate consumer project (not project(":preferences-api")) and exercise
 # a real public type from the published jar.
 set -euo pipefail
 
@@ -11,8 +11,8 @@ CONSUMER="$(mktemp -d "${TMPDIR:-/tmp}/preferences-consumer.XXXXXX")"
 cleanup() { rm -rf "$CONSUMER"; }
 trap cleanup EXIT
 
-echo "==> Publishing :api to mavenLocal"
-./gradlew --no-daemon :api:publishToMavenLocal
+echo "==> Publishing :preferences-api to mavenLocal"
+./gradlew --no-daemon :preferences-api:publishToMavenLocal
 
 # Locate the published jar under the user's local Maven repo.
 GROUP_PATH="dev/mintychochip/preferences-api"
@@ -48,7 +48,7 @@ repositories {
 }
 
 dependencies {
-    // Real published coordinate — NOT project(":api")
+    // Real published coordinate — NOT project(":preferences-api")
     implementation("dev.mintychochip:preferences-api:${VERSION}")
     compileOnly("io.papermc.paper:paper-api:26.2.build.+")
 }
@@ -108,7 +108,7 @@ public final class Main {
         if (!location.contains("preferences-api")) {
             System.err.println("WARN: code source does not look like preferences-api jar: " + location);
             // Still fail hard if it looks like a project build dir instead of m2.
-            if (location.contains("/api/build/") || location.contains("project")) {
+            if (location.contains("/preferences-api/build/") || location.contains("project")) {
                 throw new AssertionError("loaded from project output, not published jar: " + location);
             }
         }

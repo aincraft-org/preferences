@@ -1,5 +1,5 @@
 dependencies {
-    api(project(":api"))
+    api(project(":preferences-api"))
 
     implementation("com.github.ben-manes.caffeine:caffeine:3.2.0")
 

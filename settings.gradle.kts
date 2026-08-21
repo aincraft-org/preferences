@@ -1,3 +1,3 @@
 rootProject.name = "preferences"
 
-include("api", "common", "paper", "test")
+include("preferences-api", "preferences-common", "preferences-paper", "preferences-test")

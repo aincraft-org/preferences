@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
     // Public registration surface only — never paper/common internals.
-    compileOnly(project(":api"))
+    compileOnly(project(":preferences-api"))
     compileOnly("io.papermc.paper:paper-api:26.2.build.+")
 }
 
@@ -16,6 +16,6 @@ tasks {
     runServer {
         minecraftVersion("26.2")
         // Auto-includes this module's jar; also load the Preferences plugin jar.
-        pluginJars(project(":paper").tasks.named<Jar>("jar").flatMap { it.archiveFile })
+        pluginJars(project(":preferences-paper").tasks.named<Jar>("jar").flatMap { it.archiveFile })
     }
 }

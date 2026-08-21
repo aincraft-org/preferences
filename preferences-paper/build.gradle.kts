@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":common"))
+    implementation(project(":preferences-common"))
 
     compileOnly("io.papermc.paper:paper-api:26.2.build.+")
     compileOnly("org.jspecify:jspecify:1.0.0")
@@ -13,11 +13,11 @@ dependencies {
 // plugin load brings the full runtime (public API + internals). Also embed
 // common's runtime deps that Paper does not provide (Caffeine).
 tasks.jar {
-    dependsOn(":api:classes", ":common:classes")
-    from(project(":api").sourceSets["main"].output)
-    from(project(":common").sourceSets["main"].output)
+    dependsOn(":preferences-api:classes", ":preferences-common:classes")
+    from(project(":preferences-api").sourceSets["main"].output)
+    from(project(":preferences-common").sourceSets["main"].output)
     from({
-        project(":common").configurations["runtimeClasspath"]
+        project(":preferences-common").configurations["runtimeClasspath"]
             .filter { it.name.startsWith("caffeine") }
             .map { if (it.isDirectory) it else zipTree(it) }
     })

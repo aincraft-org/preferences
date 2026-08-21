@@ -1,6 +1,10 @@
 # Preferences
 
-![CI](https://github.com/aincraft-org/preferences/actions/workflows/ci.yml/badge.svg)
+[![CI](https://img.shields.io/github/actions/workflow/status/aincraft-org/preferences/ci.yml?branch=master&label=build&logo=github)](https://github.com/aincraft-org/preferences/actions/workflows/ci.yml)
+[![Java](https://img.shields.io/badge/Java-25-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Paper](https://img.shields.io/badge/Paper-26.2%2B-blue)](https://papermc.io/)
+[![Maven](https://img.shields.io/badge/Maven-dev.mintychochip%3Apreferences--api-0.2.0-blue)](https://github.com/aincraft-org/preferences/packages)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/aincraft-org/preferences/releases)
 
 Paper **26.2+** plugin that lets other plugins declare typed preferences and get a native dialog GUI, state management, and YAML persistence for free.
 
@@ -17,7 +21,7 @@ Paper **26.2+** plugin that lets other plugins declare typed preferences and get
 
 ## Install
 
-1. Download `paper/build/libs/preferences-0.2.0.jar` (or publish it locally).
+1. Download `preferences-paper/build/libs/preferences-0.2.0.jar` (or publish it locally).
 2. Drop it in your server's `plugins/` directory.
 3. Restart; hooking plugins will register their preferences at enable time.
 
@@ -29,7 +33,7 @@ For full admin docs (commands, permissions, configuration) see [`AGENTS.md`](AGE
 
 ```kotlin
 repositories {
-    mavenLocal() // after :api:publishToMavenLocal
+    mavenLocal() // after :preferences-api:publishToMavenLocal
     maven {
         url = uri("https://maven.pkg.github.com/aincraft-org/preferences")
         credentials {
@@ -113,8 +117,8 @@ gui:
 ## Build & test
 
 ```bash
-./gradlew :api:build :common:build :paper:build :test:build test
-./gradlew :test:runServer   # local integration server
+./gradlew :preferences-api:build :preferences-common:build :preferences-paper:build :preferences-test:build test
+./gradlew :preferences-test:runServer   # local integration server
 ```
 
 Prove the full publish path (Maven Local + real consumer resolve):
@@ -127,28 +131,28 @@ Prove the full publish path (Maven Local + real consumer resolve):
 
 | Module | Artifact | Role |
 |---|---|---|
-| `api` | `dev.mintychochip:preferences-api` | Public registration surface for hooking plugins |
-| `common` | (internal) | Registry, storage, flusher, sessions |
-| `paper` | `dev.mintychochip:preferences` | Shippable Preferences plugin jar (embeds api + common) |
-| `test` | — | Fixture plugin + jpenilla `runServer` |
+| `preferences-api` | `dev.mintychochip:preferences-api` | Public registration surface for hooking plugins |
+| `preferences-common` | (internal) | Registry, storage, flusher, sessions |
+| `preferences-paper` | `dev.mintychochip:preferences` | Shippable Preferences plugin jar (embeds api + common) |
+| `preferences-test` | — | Fixture plugin + jpenilla `runServer` |
 
 ## Publishing (maintainers)
 
 ```bash
 # Local Maven repo
-./gradlew :api:publishToMavenLocal :paper:publishToMavenLocal
+./gradlew :preferences-api:publishToMavenLocal :preferences-paper:publishToMavenLocal
 
 # GitHub Packages (needs write:packages)
 export GITHUB_ACTOR=mintychochip
 export GITHUB_TOKEN=ghp_...   # PAT with write:packages, read:packages, repo
-./gradlew :api:publish :paper:publish
+./gradlew :preferences-api:publish :preferences-paper:publish
 ```
 
 ## CI
 
 GitHub Actions (`.github/workflows/ci.yml`) on `master` / PRs:
 
-- Builds `:api`, `:common`, `:paper`, and **`:test`**
+- Builds `:preferences-api`, `:preferences-common`, `:preferences-paper`, and **`:preferences-test`**
 - Runs unit tests
 - Runs `scripts/verify-maven-publish.sh`
 

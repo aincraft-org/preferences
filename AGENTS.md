@@ -230,9 +230,9 @@ players:
 ## Building
 
 ```bash
-./gradlew :api:build :common:build :paper:build :test:build test   # CI-equivalent
-./gradlew :test:runServer                                          # local Paper 26.2 smoke server
+./gradlew :preferences-api:build :preferences-common:build :preferences-paper:build :preferences-test:build test   # CI-equivalent
+./gradlew :preferences-test:runServer                                          # local Paper 26.2 smoke server
 ./scripts/verify-maven-publish.sh                                  # prove the publish path
 ```
 
-Local publish of the API for hooking plugins: `./gradlew :api:publishToMavenLocal`.
+Local publish of the API for hooking plugins: `./gradlew :preferences-api:publishToMavenLocal`.

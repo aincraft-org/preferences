@@ -8,7 +8,7 @@ on:
 
 jobs:
   publish:
-    name: Publish api (+ paper plugin jar) to GitHub Packages
+    name: Publish preferences-api (+ preferences-paper plugin jar) to GitHub Packages
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -28,10 +28,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build
-        run: ./gradlew --no-daemon :api:build :paper:build test
+        run: ./gradlew --no-daemon :preferences-api:build :preferences-paper:build test
 
       - name: Publish to GitHub Packages
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./gradlew --no-daemon :api:publish :paper:publish
+        run: ./gradlew --no-daemon :preferences-api:publish :preferences-paper:publish

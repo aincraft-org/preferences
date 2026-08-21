@@ -53,7 +53,7 @@ publishing {
     }
 
     repositories {
-        // Local: ./gradlew :api:publishToMavenLocal
+        // Local: ./gradlew :preferences-api:publishToMavenLocal
         // GitHub Packages: GITHUB_ACTOR + GITHUB_TOKEN (needs write:packages)
         maven {
             name = "GitHubPackages"
