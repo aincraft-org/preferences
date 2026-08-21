@@ -27,10 +27,9 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Multi-module build + unit tests + :preferences-test package
-        # Explicit :preferences-test:build makes the test plugin a hard CI requirement.
-        # Unit tests run via root `test` (preferences-api + preferences-common). No runServer (non-deterministic).
-        run: ./gradlew --no-daemon --stacktrace :preferences-api:build :preferences-common:build :preferences-paper:build :preferences-test:build test
+      - name: Multi-module build + unit tests
+        # Root aggregator has no `test` task; `:ci` builds all modules (incl. :preferences-test) and runs subproject tests.
+        run: ./gradlew --no-daemon --stacktrace ci
 
       - name: Prove Maven publish path (local + consumer resolve)
         run: ./scripts/verify-maven-publish.sh
