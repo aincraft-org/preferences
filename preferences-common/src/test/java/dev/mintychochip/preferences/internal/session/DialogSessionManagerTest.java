@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-
+/** Verifies single-slot dialog sessions and namespace-scoped teardown. */
 class DialogSessionManagerTest {
-
+  /** Builds a non-edit list session for tests. */
   private static DialogSession listSession(UUID player, PreferenceScope scope, int page) {
     return new DialogSession(
         player,

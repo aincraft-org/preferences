@@ -17,6 +17,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.Nullable;
 
+/**
+ * Runtime {@link Preference} implementation registered in {@link PreferenceRegistry}.
+ *
+ * <p>Lazy-loads stored values through {@link #storedValueLookup}, fires cancellable
+ * {@link PreferenceChangeEvent}s before mutations, and persists via {@link #appliedHook}.
+ */
 public final class RegisteredPreference<T> implements Preference<T> {
 
     private final PreferenceKey key;
@@ -31,12 +37,46 @@ public final class RegisteredPreference<T> implements Preference<T> {
     private final Object globalLock = new Object();
     private volatile @Nullable T globalValue;
 
-    /** Callbacks injected by the plugin wiring (storage + event bridge). */
+    /**
+     * Resolves a stored string for a composite lookup key
+     * ({@code namespace\u0000target\u0000name}), or {@code null} if unset.
+     *
+     * <p>Wired by the plugin after registration. While {@code null}, lazy reads return
+     * {@link #defaultValue()} and writes skip persistence.
+     */
     public @Nullable Function<String, String> storedValueLookup; // returns stored string or null
+    /**
+     * Persists a successful, non-cancelled mutation and marks the namespace dirty for debounced
+     * flush.
+     *
+     * <p>Wired by the plugin after registration. While {@code null}, in-memory caches update but
+     * values are not written to storage.
+     */
     public @Nullable Consumer<Applied> appliedHook; // persistence + dirty marking
 
+    /**
+     * Payload passed to {@link #appliedHook} after a successful, non-cancelled mutation.
+     *
+     * @param key preference that changed
+     * @param scope scope of the stored row
+     * @param player player UUID for player-scoped writes, or {@code null} for global
+     * @param storedValue new persisted string form
+     */
     public record Applied(PreferenceKey key, PreferenceScope scope, @Nullable UUID player, String storedValue) {}
 
+    /**
+     * Creates a registered preference with immutable metadata and an optional change callback.
+     *
+     * @param key stable preference identifier
+     * @param scope player or global scope
+     * @param label dialog label
+     * @param description dialog description
+     * @param codec storage and optional dialog codec bundle
+     * @param type declared value type
+     * @param defaultValue value used when no stored row exists
+     * @param onChange optional per-preference callback; may be {@code null}
+     * @throws NullPointerException if any required argument is {@code null}
+     */
     public RegisteredPreference(PreferenceKey key, PreferenceScope scope, Component label,
                                 Component description, PreferenceCodec<T> codec, Class<T> type,
                                 T defaultValue, @Nullable Consumer<PreferenceChange> onChange) {
@@ -50,40 +90,59 @@ public final class RegisteredPreference<T> implements Preference<T> {
         this.onChange = onChange; // intentionally nullable
     }
 
+    /** {@inheritDoc} */
     @Override
     public PreferenceKey key() {
         return key;
     }
 
+    /** {@inheritDoc} */
     @Override
     public PreferenceScope scope() {
         return scope;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<T> type() {
         return type;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Component label() {
         return label;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Component description() {
         return description;
     }
 
+    /** {@inheritDoc} */
     @Override
     public T defaultValue() {
         return defaultValue;
     }
 
+    /** @return codec bundle used for persistence and optional dialog editing */
     public PreferenceCodec<T> codec() {
         return codec;
     }
 
+    /**
+     * Returns the current value for {@code player}.
+     *
+     * <p>Requires {@link PreferenceScope#PLAYER}. Lazily loads from {@link #storedValueLookup}
+     * on first access per UUID, parsing via the preference {@link #codec()} and falling back to
+     * {@link #defaultValue()} when unset or invalid.
+     *
+     * @param player player whose stored value is read
+     * @return current typed value
+     * @throws IllegalStateException if this preference is not player-scoped
+     * @throws NullPointerException if {@code player} is {@code null}
+     */
     @Override
     public T get(Player player) {
         checkScope(PreferenceScope.PLAYER);
@@ -95,6 +154,16 @@ public final class RegisteredPreference<T> implements Preference<T> {
         });
     }
 
+    /**
+     * Returns the current global value.
+     *
+     * <p>Requires {@link PreferenceScope#GLOBAL}. Uses double-checked locking to lazily load from
+     * {@link #storedValueLookup}, parsing via the preference {@link #codec()} and falling back to
+     * {@link #defaultValue()} when unset or invalid.
+     *
+     * @return current typed global value
+     * @throws IllegalStateException if this preference is not global-scoped
+     */
     @Override
     public T getGlobal() {
         checkScope(PreferenceScope.GLOBAL);
@@ -113,6 +182,18 @@ public final class RegisteredPreference<T> implements Preference<T> {
         return value;
     }
 
+    /**
+     * Sets the value for {@code player} after a cancellable change event.
+     *
+     * <p>Requires {@link PreferenceScope#PLAYER}. Serializes with the preference
+     * {@link #codec()} before persistence.
+     *
+     * @param player player whose value is updated
+     * @param newValue new typed value
+     * @throws IllegalStateException if this preference is not player-scoped
+     * @throws IllegalArgumentException if {@code newValue} is not an instance of {@link #type()}
+     * @throws NullPointerException if any argument is {@code null}
+     */
     @Override
     public void set(Player player, T newValue) {
         checkScope(PreferenceScope.PLAYER);
@@ -121,6 +202,16 @@ public final class RegisteredPreference<T> implements Preference<T> {
         apply(player, player.getUniqueId(), newValue);
     }
 
+    /**
+     * Sets the global value programmatically after a cancellable change event.
+     *
+     * <p>Requires {@link PreferenceScope#GLOBAL}. The fired event's editor is {@code null}.
+     *
+     * @param newValue new typed value
+     * @throws IllegalStateException if this preference is not global-scoped
+     * @throws IllegalArgumentException if {@code newValue} is not an instance of {@link #type()}
+     * @throws NullPointerException if {@code newValue} is {@code null}
+     */
     @Override
     public void setGlobal(T newValue) {
         checkScope(PreferenceScope.GLOBAL);
@@ -128,6 +219,18 @@ public final class RegisteredPreference<T> implements Preference<T> {
         apply(null, null, newValue); // editor intentionally null (programmatic)
     }
 
+    /**
+     * Sets the global value and attributes the change to {@code editor}.
+     *
+     * <p>Requires {@link PreferenceScope#GLOBAL}. Used when an admin saves from a dialog; the
+     * event's editor is {@code editor}'s UUID.
+     *
+     * @param editor player performing the edit
+     * @param newValue new typed value
+     * @throws IllegalStateException if this preference is not global-scoped
+     * @throws IllegalArgumentException if {@code newValue} is not an instance of {@link #type()}
+     * @throws NullPointerException if any argument is {@code null}
+     */
     @Override
     public void setGlobal(Player editor, T newValue) {
         checkScope(PreferenceScope.GLOBAL);
@@ -136,12 +239,23 @@ public final class RegisteredPreference<T> implements Preference<T> {
         apply(null, editor.getUniqueId(), newValue);
     }
 
+    /**
+     * Resets the player's stored value to {@link #defaultValue()}.
+     *
+     * @param player player whose value is reset
+     * @throws NullPointerException if {@code player} is {@code null}
+     */
     @Override
     public void reset(Player player) {
         Objects.requireNonNull(player, "player");
         set(player, defaultValue);
     }
 
+    /**
+     * Resets the global stored value to {@link #defaultValue()}.
+     *
+     * @throws IllegalStateException if this preference is not global-scoped
+     */
     @Override
     public void resetGlobal() {
         setGlobal(defaultValue);
@@ -201,7 +315,12 @@ public final class RegisteredPreference<T> implements Preference<T> {
         }
     }
 
-    /** Session/dialog support: evict cached value so next read reloads from store. */
+    /**
+     * Session/dialog support: evict cached value so next read reloads from store.
+     *
+     * @param uuid player whose cached value is evicted
+     * @throws NullPointerException if {@code uuid} is null
+     */
     public void invalidatePlayer(UUID uuid) {
         playerValues.remove(Objects.requireNonNull(uuid, "uuid"));
     }

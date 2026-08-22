@@ -9,8 +9,15 @@ import java.util.function.Function;
 import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.Nullable;
 
+/**
+ * Factory methods for common {@link DialogInputAdapter} implementations.
+ *
+ * <p>Response parsers apply defense-in-depth validation and return {@code null} for absent or
+ * out-of-range client values.
+ */
 public final class BuiltInAdapters {
 
+    /** @return checkbox adapter for boolean preferences */
     public static DialogInputAdapter<Boolean> checkbox() {
         return new DialogInputAdapter<>() {
             @Override public DialogInput buildInput(String key, Component label, Boolean current) {
@@ -27,6 +34,18 @@ public final class BuiltInAdapters {
         };
     }
 
+    /**
+     * Creates a numeric range slider adapter.
+     *
+     * @param min minimum accepted value, inclusive
+     * @param max maximum accepted value, inclusive
+     * @param step slider step
+     * @param toFloat converts the typed value to the dialog float representation
+     * @param fromFloat converts a validated dialog float back to the typed value
+     * @param <N> number type
+     * @return slider adapter
+     * @throws NullPointerException if {@code toFloat} or {@code fromFloat} is {@code null}
+     */
     public static <N extends Number> DialogInputAdapter<N> slider(
             float min, float max, float step,
             Function<N, Float> toFloat, Function<Float, N> fromFloat) {
@@ -51,6 +70,15 @@ public final class BuiltInAdapters {
         };
     }
 
+    /**
+     * Creates a single-option picker for an enum type.
+     *
+     * @param type enum class
+     * @param display maps each constant to its dialog label
+     * @param <E> enum type
+     * @return option picker adapter
+     * @throws NullPointerException if {@code type} or {@code display} is {@code null}
+     */
     public static <E extends Enum<E>> DialogInputAdapter<E> optionPicker(
             Class<E> type, Function<E, Component> display) {
         java.util.Objects.requireNonNull(type, "type");
@@ -76,6 +104,13 @@ public final class BuiltInAdapters {
         };
     }
 
+    /**
+     * Creates a bounded text input adapter.
+     *
+     * @param maxLength maximum accepted response length; must be {@code >= 0}
+     * @return text adapter
+     * @throws IllegalArgumentException if {@code maxLength} is negative
+     */
     public static DialogInputAdapter<String> text(int maxLength) {
         if (maxLength < 0) {
             throw new IllegalArgumentException("maxLength must be >= 0");

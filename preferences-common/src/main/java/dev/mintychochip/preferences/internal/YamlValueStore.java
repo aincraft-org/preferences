@@ -44,6 +44,7 @@ public final class YamlValueStore implements ValueStore {
         }
     }
 
+    /** Stores a dirty player row and its mutation generation. */
     private record DirtyEntry(long gen, Map<String, String> values) {}
 
     static final long DEFAULT_MAX_CACHED_PLAYERS = 10_000L;

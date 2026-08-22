@@ -12,9 +12,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-
+/** Verifies debounced flushing, synchronous drains, and write chaining. */
 class DebouncedFlusherTest {
-
+    /** Manual scheduler that queues runnables until {@link #fireAll()} is called. */
     static final class ManualScheduler implements FlushScheduler {
         final List<Runnable> pending = new ArrayList<>();
         @Override public Cancellable schedule(Runnable r) { pending.add(r); return () -> pending.remove(r); }

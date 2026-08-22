@@ -31,10 +31,27 @@ public class DebouncedFlusher {
     private final Map<String, CompletableFuture<Void>> inFlight = new ConcurrentHashMap<>();
     private volatile boolean shutdown;
 
+    /**
+     * Creates a debounced flusher with the default in-flight join timeout.
+     *
+     * @param store backing YAML store
+     * @param scheduler debounce timer scheduler
+     * @param delayTicks trailing debounce window in server ticks
+     * @param async executor for snapshot serialization and file I/O (off main thread)
+     */
     public DebouncedFlusher(YamlValueStore store, FlushScheduler scheduler, long delayTicks, Executor async) {
         this(store, scheduler, delayTicks, async, DEFAULT_JOIN_TIMEOUT_SECONDS);
     }
 
+    /**
+     * Package-visible for tests.
+     *
+     * @param store backing YAML store
+     * @param scheduler debounce timer scheduler
+     * @param delayTicks trailing debounce window in server ticks
+     * @param async executor for snapshot serialization and file I/O
+     * @param joinTimeoutSeconds max wait before abandoning a hung in-flight async write
+     */
     DebouncedFlusher(YamlValueStore store, FlushScheduler scheduler, long delayTicks, Executor async,
                      long joinTimeoutSeconds) {
         this.store = store;
@@ -44,6 +61,14 @@ public class DebouncedFlusher {
         this.joinTimeoutSeconds = joinTimeoutSeconds;
     }
 
+    /**
+     * Marks a namespace dirty and schedules a trailing debounce flush if none is pending.
+     *
+     * <p>Expected on the server main thread. After {@link #shutdown()}, further marks are ignored
+     * so disable drains are not re-scheduled.
+     *
+     * @param ns plugin namespace
+     */
     public synchronized void markDirty(String ns) {
         if (shutdown) return;
         dirty.add(ns);
@@ -63,9 +88,15 @@ public class DebouncedFlusher {
         if (dirty.remove(ns)) persist(ns);
     }
 
-    /** Synchronously flush exactly one namespace (hooking plugin disabling).
-     *  Writes unconditionally: after the join/abandon the latest in-memory state is
-     *  authoritative, and the idempotent rewrite guarantees the file is current on return. */
+    /**
+     * Synchronously flushes exactly one namespace (plugin disable hook).
+     *
+     * <p>Cancels any pending debounce timer, joins or abandons in-flight async writes, then
+     * writes the latest in-memory state on the calling thread. Writes unconditionally: after
+     * join/abandon the latest in-memory state is authoritative.
+     *
+     * @param ns plugin namespace
+     */
     public synchronized void flushNamespaceSync(String ns) {
         scheduled.remove(ns);
         cancelTimer(ns);
@@ -74,13 +105,24 @@ public class DebouncedFlusher {
         writeSync(ns);
     }
 
-    /** Final flush: cancels timers, drains in-flight writes and dirty namespaces until quiescent. */
+    /**
+     * Final flush for plugin disable: sets the shutdown flag, cancels timers, and drains in-flight
+     * writes and dirty namespaces until quiescent.
+     *
+     * <p>Blocks the caller until every namespace has been written synchronously. Idempotent with
+     * {@link #shutdown()}.
+     */
     public synchronized void flushAllSync() {
         shutdown = true;
         drainAll();
     }
 
-    /** Like flushAllSync: nothing outlives shutdown. */
+    /**
+     * Shuts down the flusher: sets the shutdown flag and performs the same synchronous drain as
+     * {@link #flushAllSync()}.
+     *
+     * <p>After this returns, {@link #markDirty(String)} is a no-op.
+     */
     public synchronized void shutdown() {
         shutdown = true;
         drainAll();
@@ -138,6 +180,8 @@ public class DebouncedFlusher {
      * The write is chained onto the namespace's previous in-flight write, so two debounced writes
      * for the same namespace can never overlap (different namespaces may write in parallel).
      * Overridable seam for tests.
+     *
+     * @param ns plugin namespace
      */
     protected void persist(String ns) {
         YamlValueStore.Snapshot snap = store.snapshot(ns);
@@ -154,6 +198,8 @@ public class DebouncedFlusher {
     /**
      * Single seam for the synchronous write step (disable paths): joins any in-flight async
      * write for this namespace, then writes synchronously. Overridable seam for tests.
+     *
+     * @param ns plugin namespace
      */
     protected void writeSync(String ns) {
         awaitInFlight(ns);

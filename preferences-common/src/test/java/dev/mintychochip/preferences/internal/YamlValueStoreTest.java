@@ -10,7 +10,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-
+/** Verifies YAML persistence, caching, dirty overlays, and epoch guards. */
 class YamlValueStoreTest {
 
     @Test void setAndSnapshot(@TempDir Path dir) {

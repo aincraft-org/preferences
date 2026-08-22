@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.mintychochip.preferences.api.codec.BuiltInCodecs;
 import dev.mintychochip.preferences.api.codec.StorageCodec;
 import org.junit.jupiter.api.Test;
-
+/** Verifies {@link BuiltInCodecs} round-trips and rejection of invalid stored values. */
 class BuiltInCodecsTest {
 
     @Test void booleanRoundTrip() {
@@ -42,7 +42,7 @@ class BuiltInCodecsTest {
         assertEquals("hello world", BuiltInCodecs.STRING.parse("hello world"));
         assertEquals("", BuiltInCodecs.STRING.write(""));
     }
-
+    /** Sample enum used to exercise {@link BuiltInCodecs#enumerated(Class)} round-trips. */
     enum Mode { FAST, SLOW }
 
     @Test void enumRoundTrip() {

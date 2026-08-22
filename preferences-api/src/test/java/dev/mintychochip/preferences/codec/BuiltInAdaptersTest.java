@@ -8,6 +8,7 @@ import dev.mintychochip.preferences.api.codec.DialogInputAdapter;
 import io.papermc.paper.dialog.DialogResponseView;
 import org.junit.jupiter.api.Test;
 
+/** Verifies {@link BuiltInAdapters} response validation and length/range guards. */
 class BuiltInAdaptersTest {
 
     @Test void textAcceptsWithinMaxLength() {

@@ -8,13 +8,28 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
- * Integration / hooking-plugin fixture: registers typed preferences only through the public
- * {@link PreferencesService} API (same path a third-party plugin would use).
+ * Integration and hooking-plugin fixture that registers typed preferences through the public
+ * {@link PreferencesService} API, exercising the same integration path as a third-party plugin.
+ *
+ * <p>During {@link #onEnable()}, the plugin looks up the service, disables itself when the service
+ * is unavailable, and otherwise registers five preferences with player-scoped or global
+ * persistence as configured below.
+ *
+ * <p>Instantiated by the server through the implicit no-arg constructor inherited from
+ * {@link JavaPlugin}; no custom construction or threading is performed by this fixture.
  */
 public final class TestPlugin extends JavaPlugin {
-
+    /**
+     * Weather values exposed by the enumerated {@code weather} preference.
+     */
     public enum Weather { SUNNY, RAINY, STORMY }
-
+    /**
+     * Looks up the preferences service and registers the fixture's five test preferences.
+     *
+     * <p>If the service is unavailable, logs the failure and disables this plugin without
+     * registering any preferences. Otherwise, registration completes during plugin enablement and
+     * the configured defaults are logged.
+     */
     @Override
     public void onEnable() {
         PreferencesService prefs = Bukkit.getServicesManager().load(PreferencesService.class);

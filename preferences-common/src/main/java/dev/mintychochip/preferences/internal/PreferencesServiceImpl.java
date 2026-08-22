@@ -16,13 +16,21 @@ public final class PreferencesServiceImpl implements PreferencesService {
     private final PreferenceRegistry registry;
     private final @Nullable Consumer<String> beforeUnregisterNamespace;
 
+    /**
+     * Creates a service with no namespace teardown hook.
+     *
+     * @param registry backing preference registry
+     */
     public PreferencesServiceImpl(PreferenceRegistry registry) {
         this(registry, null);
     }
 
     /**
+     * Creates a service with an optional namespace teardown hook.
+     *
+     * @param registry backing preference registry
      * @param beforeUnregisterNamespace invoked with the plugin namespace before registry removal
-     *                                  (flush pending writes + close dialog sessions).
+     *                                  (flush pending writes + close dialog sessions); may be {@code null}
      */
     public PreferencesServiceImpl(PreferenceRegistry registry,
                                   @Nullable Consumer<String> beforeUnregisterNamespace) {
@@ -30,6 +38,7 @@ public final class PreferencesServiceImpl implements PreferencesService {
         this.beforeUnregisterNamespace = beforeUnregisterNamespace; // intentionally nullable
     }
 
+    /** {@inheritDoc} */
     @Override
     public <T> Preference<T> register(Plugin owner, Class<T> type, Consumer<PreferenceBuilder<T>> configure) {
         Objects.requireNonNull(owner, "owner");
@@ -51,11 +60,17 @@ public final class PreferencesServiceImpl implements PreferencesService {
         return pref;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Collection<? extends Preference<?>> all() {
         return registry.all();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Invokes the optional teardown hook (flush + dialog close) before registry removal.
+     */
     @Override
     public void unregisterPlugin(Plugin plugin) {
         Objects.requireNonNull(plugin, "plugin");

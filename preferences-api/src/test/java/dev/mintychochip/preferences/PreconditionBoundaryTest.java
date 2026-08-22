@@ -11,10 +11,7 @@ import dev.mintychochip.preferences.api.event.PreferenceChangeEvent;
 import net.kyori.adventure.text.Component;
 import org.junit.jupiter.api.Test;
 
-/**
- * Drives real public API entry points with null to prove fail-fast preconditions,
- * and proves intentional-null contracts still accept null.
- */
+/** Verifies public API null preconditions and intentional-null contracts. */
 class PreconditionBoundaryTest {
 
     @Test void preferenceChangeRejectsNullComponents() {

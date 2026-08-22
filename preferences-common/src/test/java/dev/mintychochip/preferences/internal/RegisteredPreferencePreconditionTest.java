@@ -10,10 +10,7 @@ import org.bukkit.entity.Player;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-/**
- * Calls real {@link RegisteredPreference} public entry points with null and asserts
- * named precondition failures (before any Bukkit event path runs).
- */
+/** Verifies {@link RegisteredPreference} null preconditions and failure messages. */
 class RegisteredPreferencePreconditionTest {
 
     private static RegisteredPreference<Boolean> playerPref() {

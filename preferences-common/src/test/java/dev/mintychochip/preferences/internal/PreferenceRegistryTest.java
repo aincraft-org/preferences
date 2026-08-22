@@ -7,9 +7,9 @@ import dev.mintychochip.preferences.api.PreferenceScope;
 import dev.mintychochip.preferences.api.codec.BuiltInCodecs;
 import dev.mintychochip.preferences.api.codec.PreferenceCodec;
 import org.junit.jupiter.api.Test;
-
+/** Verifies preference registration, lookup, removal, and duplicate rejection. */
 class PreferenceRegistryTest {
-
+    /** Builds a minimal player-scoped boolean preference for registry tests. */
     private RegisteredPreference<Boolean> boolPref(String ns, String name) {
         return new RegisteredPreference<>(
             new PreferenceKey(ns, name), PreferenceScope.PLAYER,

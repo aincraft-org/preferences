@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import net.kyori.adventure.text.Component;
 import org.bukkit.plugin.Plugin;
 import org.junit.jupiter.api.Test;
-
+/** Verifies preference service registration, teardown ordering, and preconditions. */
 class PreferencesServiceImplTest {
 
     @Test void unregisterPluginInvokesTeardownBeforeRegistryRemoval() {

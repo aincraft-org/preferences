@@ -20,19 +20,40 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jspecify.annotations.Nullable;
 
+/**
+ * Routes Paper dialog custom-click events to list navigation, edit, save, and cancel flows.
+ *
+ * <p>Only clicks in the {@code preferences} namespace with a live {@link DialogSession} are
+ * handled. Clicks from non-play phases, forged identifiers, or stale sessions are ignored.
+ * Permission checks are re-applied on navigation and save because a session may outlive a
+ * permission revoke.</p>
+ */
 public final class ClickRouter implements Listener {
 
+    /** Adventure namespace shared by all preference dialog custom-click keys. */
     private static final String NAMESPACE = "preferences";
 
     private final PreferenceRegistry registry;
     private final DialogSessionManager sessions;
     private final DialogScreens screens;
+    /** Optional callback to evict persisted player rows from the store on quit. */
     private final @Nullable Consumer<UUID> playerEvictor;
 
+    /**
+     * @param registry preference lookup for edit and save targets
+     * @param sessions active dialog session store
+     * @param screens presenter used to reopen list and edit screens
+     */
     public ClickRouter(PreferenceRegistry registry, DialogSessionManager sessions, DialogScreens screens) {
         this(registry, sessions, screens, null);
     }
 
+    /**
+     * @param registry preference lookup for edit and save targets
+     * @param sessions active dialog session store
+     * @param screens presenter used to reopen list and edit screens
+     * @param playerEvictor invoked on quit to drop cached store rows for the player, or {@code null}
+     */
     public ClickRouter(PreferenceRegistry registry, DialogSessionManager sessions, DialogScreens screens,
                        @Nullable Consumer<UUID> playerEvictor) {
         this.registry = registry;
@@ -41,6 +62,14 @@ public final class ClickRouter implements Listener {
         this.playerEvictor = playerEvictor;
     }
 
+    /**
+     * Dispatches a custom click to save, cancel, pagination, or edit handlers.
+     *
+     * <p>Recognized paths: {@code save}, {@code cancel}, {@code list_prev}, {@code list_next},
+     * and {@code edit/<index>} (page-local button index).</p>
+     *
+     * @param event Paper custom-click event carrying the dialog action identifier
+     */
     @EventHandler
     public void onClick(PlayerCustomClickEvent event) {
         // Play phase only: the game connection is the only common-connection
@@ -70,6 +99,11 @@ public final class ClickRouter implements Listener {
         }
     }
 
+    /**
+     * Reopens the current list at {@code newPage}, enforcing scope-appropriate permissions.
+     *
+     * <p>No-op when the session is not on a list screen.</p>
+     */
     private void navigate(Player player, DialogSession session, int newPage) {
         if (session.screen() != DialogSession.Screen.PLUGIN_LIST) {
             return; // nav buttons never appear in edit dialogs
@@ -89,6 +123,11 @@ public final class ClickRouter implements Listener {
         }
     }
 
+    /**
+     * Opens the edit dialog for the preference at a page-local button index.
+     *
+     * <p>Malformed indices and out-of-range selections are ignored without user feedback.</p>
+     */
     private void openEditByIndex(Player player, DialogSession session, String indexStr) {
         PreferenceScope scope = session.scope();
         if (!mayEdit(player, scope)) {
@@ -117,6 +156,7 @@ public final class ClickRouter implements Listener {
         return (RegisteredPreference<T>) pref;
     }
 
+    /** Parses and persists the edit target when the session is on the edit screen. */
     private void handleSave(Player player, DialogSession session, @Nullable DialogResponseView view) {
         if (session.screen() != DialogSession.Screen.EDIT || session.editTarget() == null) return;
         RegisteredPreference<?> pref = registry.byKey(session.editTarget());
@@ -125,6 +165,13 @@ public final class ClickRouter implements Listener {
         saveTyped(player, cast(pref), view, returnPage);
     }
 
+    /**
+     * Validates dialog input under key {@code value}, persists the preference, and returns
+     * to the originating list page.
+     *
+     * <p>On parse failure the player sees a red error message and the edit dialog reopens
+     * with no value change.</p>
+     */
     private <T> void saveTyped(Player player, RegisteredPreference<T> pref,
                                @Nullable DialogResponseView view, int returnPage) {
         // Re-check permissions at save time (session may outlive a revoke).
@@ -151,11 +198,15 @@ public final class ClickRouter implements Listener {
         }
     }
 
+    /**
+     * @return {@code true} when the player may edit preferences in the given scope
+     */
     private static boolean mayEdit(Player player, PreferenceScope scope) {
         if (scope == PreferenceScope.GLOBAL) return player.hasPermission("preferences.manage");
         return player.hasPermission("preferences.use");
     }
 
+    /** Sends a scope-specific denial message and closes the player's dialog session. */
     private void denyAndClose(Player player, PreferenceScope scope) {
         String msg = scope == PreferenceScope.GLOBAL
             ? "You don't have permission to change server preferences."
@@ -164,6 +215,13 @@ public final class ClickRouter implements Listener {
         sessions.close(player.getUniqueId());
     }
 
+    /**
+     * Drops dialog state and in-memory preference caches when a player disconnects.
+     *
+     * <p>Also evicts persisted store rows when a {@link #playerEvictor} was configured.</p>
+     *
+     * @param event player quit event from Bukkit
+     */
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         UUID uuid = event.getPlayer().getUniqueId();

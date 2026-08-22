@@ -25,15 +25,34 @@ import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
+/**
+ * Paper entry point that wires preference registration, persistence, dialogs, and commands.
+ *
+ * <p>Storage writes are debounced onto a single background I/O executor, while Bukkit
+ * lifecycle callbacks and dialog interactions remain on the server thread.</p>
+ */
 public final class PreferencesPlugin extends JavaPlugin implements Listener {
 
+    /** Registry of preferences contributed by this plugin and other loaded plugins. */
     private PreferenceRegistry registry;
+    /** YAML-backed store for global values and cached player values. */
     private YamlValueStore store;
+    /** Debounced persistence coordinator for registered preference changes. */
     private DebouncedFlusher flusher;
+    /** Single-thread executor used for persistence I/O. */
     private ExecutorService io;
+    /** Active dialog sessions keyed by player and preference namespace. */
     private DialogSessionManager sessions;
+    /** Namespaces whose persisted global data has already been loaded. */
     private final Set<String> loadedNamespaces = ConcurrentHashMap.newKeySet();
 
+    /**
+     * Wires storage, debounced I/O, the {@link PreferencesService}, dialog routing, and commands.
+     *
+     * <p>Runs on the server main thread during plugin enable. Persists default config, starts the
+     * single-thread I/O executor, registers this plugin as a {@link PreferencesService} provider,
+     * and hooks preference registration to lazy YAML loads plus dirty-marking writes.
+     */
     @Override
     public void onEnable() {
         saveDefaultConfig();
@@ -69,6 +88,12 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
         registry.onRegister(this::wire);
     }
 
+    /**
+     * Connects a newly registered preference to lazy store reads and dirty-marking writes.
+     *
+     * <p>Global rows for the namespace are loaded once on first registration; player rows
+     * load on demand through the preference cache.</p>
+     */
     private void wire(RegisteredPreference<?> pref) {
         String ns = pref.key().namespace();
         // First registration from a namespace loads its persisted globals so lazy reads
@@ -100,6 +125,15 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
         loadedNamespaces.remove(ns);
     }
 
+    /**
+     * Tears down a foreign plugin namespace when that plugin disables.
+     *
+     * <p>Flushes pending writes, closes any open dialogs for the namespace, and unregisters
+     * its preferences. Ignores disable events for this plugin and namespaces with no
+     * registered preferences.</p>
+     *
+     * @param event plugin disable event from Bukkit
+     */
     @EventHandler
     public void onPluginDisable(PluginDisableEvent event) {
         if (event.getPlugin() == this) return;
@@ -110,6 +144,13 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
         registry.unregisterNamespace(ns);
     }
 
+    /**
+     * Flushes all pending writes and shuts down the background I/O executor.
+     *
+     * <p>Runs during plugin disable on the server thread. Blocks until
+     * {@link DebouncedFlusher#flushAllSync()} drains every namespace, then shuts down the I/O
+     * executor with a bounded wait.
+     */
     @Override
     public void onDisable() {
         flusher.flushAllSync();
@@ -123,11 +164,14 @@ public final class PreferencesPlugin extends JavaPlugin implements Listener {
         getLogger().info("Preferences disabled; all data flushed.");
     }
 
+    /** Debounced flush delay in server ticks, derived from {@code storage.flush-seconds}. */
     private long flushDelayTicks() {
         return getConfig().getInt("storage.flush-seconds", 5) * 20L;
     }
 
+    /** Schedules flush work on the Bukkit main thread after the configured delay. */
     private final class BukkitFlushScheduler implements FlushScheduler {
+        /** {@inheritDoc} */
         @Override
         public Cancellable schedule(Runnable task) {
             var bukkitTask = Bukkit.getScheduler().runTaskLater(PreferencesPlugin.this, task, flushDelayTicks());

@@ -16,32 +16,71 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
 
+/**
+ * Builds and presents paginated preference list dialogs and single-preference edit screens.
+ *
+ * <p>List buttons use page-local indices routed through {@link DialogFactories#editKey(int)}.
+ * Editable preferences bind dialog input to key {@code value}; read-only preferences open a
+ * notice dialog with the current stored value.</p>
+ */
 public final class DialogScreens {
 
+    /** Default number of preferences shown per list page when config does not override it. */
     public static final int PAGE_SIZE_DEFAULT = 20;
 
     private final PreferenceRegistry registry;
     private final DialogSessionManager sessions;
     private final int pageSize;
 
+    /**
+     * @param registry source of registered preferences to list and edit
+     * @param sessions session store updated before each dialog is shown
+     */
     public DialogScreens(PreferenceRegistry registry, DialogSessionManager sessions) {
         this(registry, sessions, PAGE_SIZE_DEFAULT);
     }
 
+    /**
+     * @param registry source of registered preferences to list and edit
+     * @param sessions session store updated before each dialog is shown
+     * @param pageSize maximum preferences per list page; values below {@code 1} are clamped to {@code 1}
+     */
     public DialogScreens(PreferenceRegistry registry, DialogSessionManager sessions, int pageSize) {
         this.registry = registry;
         this.sessions = sessions;
         this.pageSize = Math.max(1, pageSize);
     }
 
+    /**
+     * Opens the player-scoped preference list for {@code player} at {@code page}.
+     *
+     * <p>Out-of-range pages are clamped to the last available page.</p>
+     *
+     * @param player viewer receiving the dialog
+     * @param page zero-based list page to open
+     */
     public void showPlayerList(Player player, int page) {
         showList(player, PreferenceScope.PLAYER, page);
     }
 
+    /**
+     * Opens the server-global preference list for {@code player} at {@code page}.
+     *
+     * <p>Out-of-range pages are clamped to the last available page.</p>
+     *
+     * @param player viewer receiving the dialog
+     * @param page zero-based list page to open
+     */
     public void showGlobalList(Player player, int page) {
         showList(player, PreferenceScope.GLOBAL, page);
     }
 
+    /**
+     * Renders a paginated multi-action list for the given scope.
+     *
+     * <p>When no preferences exist, shows a notice dialog and does not open a session.
+     * Navigation buttons appear only when a previous or next page exists.</p>
+     */
     private void showList(Player player, PreferenceScope scope, int page) {
         List<RegisteredPreference<?>> prefs = registry.all().stream()
             .filter(p -> p.scope() == scope)
@@ -109,6 +148,7 @@ public final class DialogScreens {
         player.showDialog(dialog);
     }
 
+    /** Tooltip line showing the preference's current stored value for the viewing player. */
     private Component currentValueLine(Player player, RegisteredPreference<?> pref) {
         Object value = pref.scope() == PreferenceScope.GLOBAL ? pref.getGlobal() : pref.get(player);
         return Component.text("Current: " + pref.codec().storage().write(cast(value)));
@@ -119,6 +159,16 @@ public final class DialogScreens {
         return (T) o;
     }
 
+    /**
+     * Opens an edit dialog for {@code pref}, returning to {@code returnPage} after save.
+     *
+     * <p>Preferences without a dialog input adapter are shown read-only via a notice dialog.
+     * Editable preferences expose a single input keyed {@code value}.</p>
+     *
+     * @param player viewer receiving the dialog
+     * @param pref registered preference to edit
+     * @param returnPage list page to reopen after a successful save
+     */
     public <T> void showEdit(Player player, RegisteredPreference<T> pref, int returnPage) {
         var adapter = pref.codec().input();
         if (adapter == null) {
@@ -138,6 +188,7 @@ public final class DialogScreens {
         player.showDialog(dialog);
     }
 
+    /** Records an edit-screen session with parent list context for post-save navigation. */
     private void openEditSession(Player player, RegisteredPreference<?> pref, int returnPage) {
         var parent = new DialogSession.ParentContext(
             DialogSession.Screen.PLUGIN_LIST, pref.scope(), null, null, returnPage);
@@ -154,6 +205,7 @@ public final class DialogScreens {
             List.of()));
     }
 
+    /** @return number of preferences displayed per list page */
     public int pageSize() {
         return pageSize;
     }
