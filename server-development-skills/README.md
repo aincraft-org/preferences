@@ -25,6 +25,19 @@ Curated, verified skills for Minecraft/Paper server development. Agents working 
 
 Skills are consumed by agent harnesses that load `SKILL.md` files (e.g. superpowers-style skill directories). Each skill is self-contained: read the skill, follow its pinned versions and conventions, and apply its verify commands before reporting completion.
 
+## Superpowers
+
+The upstream [obra/superpowers](https://github.com/obra/superpowers) process-skill collection (brainstorming, writing-plans, executing-plans, subagent-driven-development, test-driven-development, systematic-debugging, verification-before-completion, code review pair, git worktrees, branch finishing) is vendored as a git submodule at `superpowers/`, pinned to tagged release **v6.3.0**, commit `b36e0829c6d0140e93cfef2ca599b1b07d4a7797` (verified 2026-08-21). Clone with `--recurse-submodules`, or run `git submodule update --init`.
+
+To update the pin:
+
+```bash
+git -C superpowers fetch --tags
+git -C superpowers checkout <new-tag>
+git add superpowers
+```
+
+`spec-driven-development` consumes `executing-plans` and `subagent-driven-development` from this submodule during implementation.
 
 ## Contributing
 
