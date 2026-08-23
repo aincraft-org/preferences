@@ -117,8 +117,8 @@ gui:
 ## Build & test
 
 ```bash
-./gradlew :preferences-api:build :preferences-common:build :preferences-paper:build :preferences-test:build test
-./gradlew :preferences-test:runServer   # local integration server
+./gradlew :preferences-api:build :preferences-common:build :preferences-paper:build :test:build test
+./gradlew :test:runServer   # local integration server
 ```
 
 Prove the full publish path (Maven Local + real consumer resolve):
@@ -134,7 +134,7 @@ Prove the full publish path (Maven Local + real consumer resolve):
 | `preferences-api` | `dev.mintychochip:preferences-api` | Public registration surface for hooking plugins |
 | `preferences-common` | (internal) | Registry, storage, flusher, sessions |
 | `preferences-paper` | `dev.mintychochip:preferences` | Shippable Preferences plugin jar (embeds api + common) |
-| `preferences-test` | — | Fixture plugin + jpenilla `runServer` |
+| `test` | — | Fixture plugin + jpenilla `runServer` |
 
 ## Publishing (maintainers)
 
@@ -152,7 +152,7 @@ export GITHUB_TOKEN=ghp_...   # PAT with write:packages, read:packages, repo
 
 GitHub Actions (`.github/workflows/ci.yml`) on `master` / PRs:
 
-- Builds `:preferences-api`, `:preferences-common`, `:preferences-paper`, and **`:preferences-test`**
+- Builds `:preferences-api`, `:preferences-common`, `:preferences-paper`, and **`:test`**
 - Runs unit tests
 - Runs `scripts/verify-maven-publish.sh`
 

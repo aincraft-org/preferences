@@ -11,7 +11,7 @@ A Paper plugin that owns *preferences* as a first-class concept. Other plugins h
 
 | Decision | Choice | Rationale |
 |---|---|---|
-| Target API | Paper 1.21.7+ (`paper-api 1.21.7-R0.1-SNAPSHOT`), Java 21 | Dialog API (`io.papermc.paper.dialog`) lands in 1.21.7; Java 21 is the matching server baseline. Dialog API is `@Experimental` — accept churn risk. |
+| Target API | Paper 26.2+ (`paper-api 26.2.build.+`), Java 21 | Dialog API (`io.papermc.paper.dialog`) is available in Paper 26.2; Java 21 is the matching server baseline. Dialog API is `@Experimental` — accept churn risk. |
 | Input surface | Native Dialog API only | Dialogs cover all four client input controls (checkbox, slider, option picker, text field). Chat capture is deferred. |
 | Scope per preference | Per-preference declaration: player-scoped or server-global | Covers both personal settings and server-wide knobs. |
 | Access control | Player-scoped: owning player edits own values. Global: `preferences.manage` (default op) required | "If it's global it's likely the admin." |
@@ -173,4 +173,4 @@ Player-scoped values are only editable by the owning player; no permission can g
   - Codecs: round-trip every built-in (`write(parse(x)) == x`), parse-failure cases.
   - Storage: snapshot/flush lifecycle — debounced coalescing writes once per window, disable path flushes everything synchronously, parse-failure fallback to default.
   - Session validation: clicks without a live session are rejected; expired/quit sessions purge.
-- Smoke test on a real local Paper 1.21.7 server with a demo plugin registering bool / number / enum / text preferences, exercised through the actual dialogs: open list, edit each type, save, verify persisted YAML (after flush window), restart, verify reload.
+- Smoke test on a real local Paper 26.2 server with a demo plugin registering bool / number / enum / text preferences, exercised through the actual dialogs: open list, edit each type, save, verify persisted YAML (after flush window), restart, verify reload.

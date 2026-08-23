@@ -32,12 +32,12 @@ subprojects {
 // Aggregate convenience: same path CI uses.
 tasks.register("ci") {
     group = "verification"
-    description = "Build all modules (including :preferences-test) and run unit tests"
+    description = "Build all modules (including :test) and run unit tests"
     dependsOn(
         ":preferences-api:build",
         ":preferences-common:build",
         ":preferences-paper:build",
-        ":preferences-test:build",
+        ":test:build",
         ":preferences-api:test",
         ":preferences-common:test",
     )

@@ -230,8 +230,8 @@ players:
 ## Building
 
 ```bash
-./gradlew :preferences-api:build :preferences-common:build :preferences-paper:build :preferences-test:build test   # CI-equivalent
-./gradlew :preferences-test:runServer                                          # local Paper 26.2 smoke server
+./gradlew :preferences-api:build :preferences-common:build :preferences-paper:build :test:build test   # CI-equivalent
+./gradlew :test:runServer                                          # local Paper 26.2 smoke server
 ./scripts/verify-maven-publish.sh                                  # prove the publish path
 ```
 

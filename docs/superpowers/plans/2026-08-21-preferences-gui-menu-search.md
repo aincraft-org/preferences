@@ -306,7 +306,7 @@ Expected: both commands complete successfully.
 - [ ] **Step 4: Run the Paper smoke server**
 
 ```bash
-./gradlew :preferences-test:runServer
+./gradlew :test:runServer
 ```
 
 Exercise `/prefs`, plugin selection, Back, Search, search results, edit/save, `/prefs global`, and permission denial. Stop the server after verification.

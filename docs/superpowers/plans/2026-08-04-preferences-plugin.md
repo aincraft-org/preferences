@@ -2,17 +2,17 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a Paper 1.21.7+ plugin that lets other plugins declare typed preferences and get dialog-based GUI, state management, and YAML persistence for free.
+**Goal:** Build a Paper 26.2+ plugin that lets other plugins declare typed preferences and get dialog-based GUI, state management, and YAML persistence for free.
 
 **Architecture:** Hooking plugins load a `PreferencesService` from the Bukkit services manager and register preferences with a required `StorageCodec<T>` (type ↔ stored string) and optional `DialogInputAdapter<T>` (type ↔ dialog input). This plugin owns navigation dialogs, session-validated click routing, permissions, and debounced async YAML persistence.
 
-**Tech Stack:** Java 21 (compile `--release 21` on local JDK 25), Gradle 9.6.1 (wrapper), Paper API `1.21.7-R0.1-SNAPSHOT`, SnakeYAML, JUnit 5.
+**Tech Stack:** Java 21 (compile `--release 21` on local JDK 25), Gradle 9.6.1 (wrapper), Paper API `26.2.build.+`, SnakeYAML, JUnit 5.
 
 **Spec:** `docs/superpowers/specs/2026-08-04-preferences-plugin-design.md`
 
 ## Global Constraints
 
-- Paper API floor: `1.21.7-R0.1-SNAPSHOT`; Dialog API is `@Experimental` — compile against it, do not suppress warnings project-wide.
+- Paper API floor: `26.2.build.+`; Dialog API is `@Experimental` — compile against it, do not suppress warnings project-wide.
 - Java: `options.release = 21`. Do NOT use Gradle toolchains (they download JDKs); compile with the installed JDK.
 - No main-thread YAML serialization or file I/O on the change path. Writes go through the debounced async flusher; `onDisable` flushes synchronously.
 - Vanilla dialog input `key` values must match `[a-zA-Z0-9_]` (template-argument rule) — never pass namespaced keys as dialog input keys.
@@ -28,7 +28,7 @@
 settings.gradle.kts                 root + :demo
 build.gradle.kts                    plugin build (paper-api compileOnly, JUnit 5)
 gradle/wrapper/...                  wrapper pinned to 9.6.1
-src/main/resources/plugin.yml       name, main, api-version 1.21, permissions, command
+src/main/resources/plugin.yml       name, main, api-version 26.2, permissions, command
 src/main/java/dev/jlo/preferences/
   PreferencesPlugin.java            JavaPlugin wiring (Task 7)
   api/
@@ -98,10 +98,10 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
     compileOnly("org.jspecify:jspecify:1.0.0")
 
-    testImplementation("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
+    testImplementation("io.papermc.paper:paper-api:26.2.build.+")
     testImplementation(platform("org.junit:junit-bom:5.11.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -128,7 +128,7 @@ repositories {
 
 dependencies {
     compileOnly(rootProject)
-    compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
 }
 
 tasks.withType<JavaCompile>().configureEach { options.release = 21 }
@@ -148,7 +148,7 @@ run/
 name: Preferences
 version: '0.1.0'
 main: dev.mintychochip.preferences.PreferencesPlugin
-api-version: '1.21'
+api-version: '26.2'
 description: Typed preferences with dialog GUI, owned by this plugin.
 ```
 
@@ -238,7 +238,7 @@ public final class DialogFactories {
 }
 ```
 
-NOTE: All Paper dialog calls above (`Dialog.create` builder chain, `DialogBase.builder`, `DialogType.multiAction(actions, exit, columns)`, `DialogType.confirmation(yes, no)`, `DialogType.notice()`, `ActionButton.builder().action()`, `DialogAction.customClick(Key, null)`) are verified against Paper's official Dialog API docs and 1.21.7 javadoc. The ONLY unverified call is `OptionEntry.of(...)` below — that is the probe.
+NOTE: All Paper dialog calls above (`Dialog.create` builder chain, `DialogBase.builder`, `DialogType.multiAction(actions, exit, columns)`, `DialogType.confirmation(yes, no)`, `DialogType.notice()`, `ActionButton.builder().action()`, `DialogAction.customClick(Key, null)`) are verified against Paper's official Dialog API docs and 26.2 javadoc. The ONLY unverified call is `OptionEntry.of(...)` below — that is the probe.
 
 - [ ] **Step 4: Compile the probe**
 
@@ -1947,7 +1947,7 @@ Replace `src/main/resources/plugin.yml` with:
 name: Preferences
 version: '0.1.0'
 main: dev.mintychochip.preferences.PreferencesPlugin
-api-version: '1.21'
+api-version: '26.2'
 description: Typed preferences with dialog GUI, owned by this plugin.
 commands:
   preferences:
@@ -1992,7 +1992,7 @@ git add -A && git commit -m "feat: command, permissions, plugin wiring with asyn
 
 **Files:**
 - Create: `demo/src/main/resources/plugin.yml`, `demo/src/main/java/dev/jlo/preferences/demo/DemoPlugin.java`
-- Manual: local Paper 1.21.7 server under `run/` (gitignored)
+- Manual: local Paper 26.2 server under `run/` (gitignored)
 
 **Interfaces:**
 - Consumes: the full public API exactly as a third-party plugin would.
@@ -2004,7 +2004,7 @@ git add -A && git commit -m "feat: command, permissions, plugin wiring with asyn
 name: PreferencesDemo
 version: '0.1.0'
 main: dev.mintychochip.preferences.demo.DemoPlugin
-api-version: '1.21'
+api-version: '26.2'
 depend: [Preferences]
 ```
 
@@ -2079,11 +2079,11 @@ public final class DemoPlugin extends JavaPlugin {
 Run: `./gradlew build --console=plain`
 Expected: `build/libs/preferences-0.1.0-SNAPSHOT.jar` and `demo/build/libs/demo-0.1.0-SNAPSHOT.jar` exist.
 
-- [ ] **Step 3: Provision a local Paper 1.21.7 server**
+- [ ] **Step 3: Provision a local Paper 26.2 server**
 
 ```bash
 mkdir -p run/plugins
-curl -fsSL "https://fill.papermc.io/v3/projects/paper/versions/1.21.7/builds/latest" -o /tmp/latest.json
+curl -fsSL "https://fill.papermc.io/v3/projects/paper/versions/26.2/builds/latest" -o /tmp/latest.json
 URL=$(python3 -c "import json;d=json.load(open('/tmp/latest.json'));print(d['downloads']['application:shaded']['url'])")
 curl -fsSL "$URL" -o run/paper.jar
 echo eula=true > run/eula.txt
@@ -2095,7 +2095,7 @@ Expected: jars copied into `run/plugins/`.
 - [ ] **Step 4: Start server and drive the smoke test**
 
 Start the server as a supervised process (hub `start`, ready.log `Done`), then in the server console:
-1. Join with a client (or use the server console `dialog show` is NOT sufficient — dialog interaction requires a real client; use a local Minecraft 1.21.7 client).
+1. Join with a client (or use the server console `dialog show` is NOT sufficient — dialog interaction requires a real client; use a local Minecraft 26.2 client).
 2. Run `/preferences`: list dialog opens with the 4 player prefs.
 3. Edit each: toggle Notifications (checkbox), move Volume slider to a new value, pick a different Weather, type a Nickname. Save each; confirm the green "Saved" message and return to the list.
 4. Run `/preferences global` as an op player: Announce Logins appears; toggle it; save.
@@ -2108,12 +2108,12 @@ Expected: every step passes. Record outcomes; any failure → fix and repeat fro
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -A && git commit -m "test: demo plugin + smoke test procedure verified on Paper 1.21.7"
+git add -A && git commit -m "test: demo plugin + smoke test procedure verified on Paper 26.2"
 ```
 
 ---
 
 ## Post-plan notes
 
-- The Dialog API is `@Experimental`; when Paper bumps past 1.21.7, recompile and re-run the Task 8 smoke test — signature drift is isolated to `DialogFactories`.
+- The Dialog API is `@Experimental`; when Paper bumps past 26.2, recompile and re-run the Task 8 smoke test — signature drift is isolated to `DialogFactories`.
 - Future SPI work (custom storage backends, chat input fallback) grows from the `ValueStore` boundary and `DialogInputAdapter` seam without breaking hooking plugins.
