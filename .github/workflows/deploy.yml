@@ -1,0 +1,54 @@
+name: Deploy to PebbleHost
+
+on:
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: Comma-separated PebbleHost server targets (serverId[:group])
+        required: true
+        type: string
+      restart:
+        description: Restart servers after upload
+        type: boolean
+        default: true
+      rollback:
+        description: Rollback policy on failure (abort|restore)
+        type: choice
+        options: [abort, restore]
+        default: abort
+      continue-after-canary:
+        description: Proceed past the canary group
+        type: boolean
+        default: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_ACTOR: ${{ github.actor }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Build
+        run: ./gradlew --no-daemon :test:build
+
+      - name: Deploy
+        env:
+          PEBBLEHOST_API_TOKEN: ${{ secrets.PEBBLEHOST_API_TOKEN }}
+          PEBBLEHOST_TARGETS: ${{ inputs.targets }}
+          PEBBLEHOST_RESTART: ${{ inputs.restart }}
+          PEBBLEHOST_ROLLBACK: ${{ inputs.rollback }}
+          PEBBLEHOST_CONTINUE_AFTER_CANARY: ${{ inputs.continue-after-canary }}
+        run: ./gradlew --no-daemon :test:deployPebbleHost "-PpebblehostTargets=$PEBBLEHOST_TARGETS" "--deploy-restart=$PEBBLEHOST_RESTART" "--deploy-rollback=$PEBBLEHOST_ROLLBACK" "--continue-after-canary=$PEBBLEHOST_CONTINUE_AFTER_CANARY"
