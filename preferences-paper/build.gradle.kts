@@ -42,7 +42,7 @@ publishing {
             }
             artifact(tasks.named("sourcesJar"))
             groupId = project.group.toString()
-            artifactId = "preferences"
+            artifactId = "preferences-paper"
             version = project.version.toString()
 
             pom {

@@ -133,7 +133,7 @@ Prove the full publish path (Maven Local + real consumer resolve):
 |---|---|---|
 | `preferences-api` | `dev.mintychochip:preferences-api` | Public registration surface for hooking plugins |
 | `preferences-common` | (internal) | Registry, storage, flusher, sessions |
-| `preferences-paper` | `dev.mintychochip:preferences` | Shippable Preferences plugin jar (embeds api + common) |
+| `preferences-paper` | `dev.mintychochip:preferences-paper` | Shippable Preferences plugin jar (embeds api + common) |
 | `preferences-test` | — | Fixture plugin + jpenilla `runServer` |
 
 ## Publishing (maintainers)
