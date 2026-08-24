@@ -80,7 +80,7 @@ boolean enabled = notifications.get(player);
 notifications.set(player, false);
 ```
 
-Import only `dev.mintychochip.preferences.api.*` — never `dev.mintychochip.preferences.internal.*`.
+Import only `dev.mintychochip.preferences.api.*` — never `dev.mintychochip.preferences.common.internal.*`.
 
 ## Built-in types
 
@@ -134,7 +134,7 @@ Prove the full publish path (Maven Local + real consumer resolve):
 | `preferences-api` | `dev.mintychochip:preferences-api` | Public registration surface for hooking plugins |
 | `preferences-common` | (internal) | Registry, storage, flusher, sessions |
 | `preferences-paper` | `dev.mintychochip:preferences` | Shippable Preferences plugin jar (embeds api + common) |
-| `test` | — | Fixture plugin + jpenilla `runServer` |
+| `preferences-test` | — | Fixture plugin + jpenilla `runServer` |
 
 ## Publishing (maintainers)
 

@@ -195,7 +195,7 @@ Or the per-preference callback: `b.onChange(c -> ...)` with `PreferenceChange(ke
 
 ### 7. Don't do this
 
-- Never import `dev.mintychochip.preferences.internal.*` — it is not part of the stable API.
+- Never import `dev.mintychochip.preferences.common.internal.*` — it is not part of the stable API.
 - Don't hand-edit `plugins/Preferences/data/*.yml` while the server runs — a later flush
   overwrites it. Stop the server first.
 - Don't bake the dialog `inputKey` — dialog input keys follow vanilla

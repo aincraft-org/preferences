@@ -1,6 +1,6 @@
 name: Preferences
 version: '${version}'
-main: dev.mintychochip.preferences.PreferencesPlugin
+main: dev.mintychochip.preferences.paper.PreferencesPlugin
 api-version: '26.2'
 description: Typed preferences with dialog GUI, owned by this plugin.
 commands:
