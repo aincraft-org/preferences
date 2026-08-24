@@ -4,7 +4,7 @@
 [![Java](https://img.shields.io/badge/Java-25-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![Paper](https://img.shields.io/badge/Paper-26.2%2B-blue)](https://papermc.io/)
 [![Maven](https://img.shields.io/static/v1?label=Maven&message=dev.mintychochip:preferences-api&color=blue)](https://github.com/aincraft-org/preferences/packages)
-[![Version](https://img.shields.io/badge/version-CalVer-blue)](https://github.com/aincraft-org/preferences/releases)
+[![Version](https://img.shields.io/github/v/release/aincraft-org/preferences?label=version)](https://github.com/aincraft-org/preferences/releases)
 
 Paper **26.2+** plugin that lets other plugins declare typed preferences and get a native dialog GUI, state management, and YAML persistence for free.
 
