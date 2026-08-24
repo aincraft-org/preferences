@@ -1,5 +1,5 @@
 name: PreferencesTest
-version: '0.2.0'
+version: '${version}'
 main: dev.mintychochip.preferences.test.TestPlugin
 api-version: '26.2'
 depend: [Preferences]

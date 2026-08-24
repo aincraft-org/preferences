@@ -4,7 +4,17 @@ plugins {
 
 allprojects {
     group = "dev.mintychochip"
-    version = "0.2.0"
+    // CalVer: YYYY.MM.DD.<github_run_number> in CI; dated -SNAPSHOT locally.
+    // buildVersion is an explicit release override (see ci-release skill).
+    val calverDate = java.time.LocalDate.now(java.time.ZoneOffset.UTC)
+        .format(java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+    version = providers.gradleProperty("buildVersion")
+        .orElse(
+            providers.environmentVariable("GITHUB_RUN_NUMBER")
+                .map { "$calverDate.$it" }
+        )
+        .orElse("$calverDate-SNAPSHOT")
+        .get()
 }
 
 subprojects {

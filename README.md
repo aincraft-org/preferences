@@ -3,8 +3,8 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/aincraft-org/preferences/ci.yml?branch=master&label=build&logo=github)](https://github.com/aincraft-org/preferences/actions/workflows/ci.yml)
 [![Java](https://img.shields.io/badge/Java-25-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![Paper](https://img.shields.io/badge/Paper-26.2%2B-blue)](https://papermc.io/)
-[![Maven](https://img.shields.io/static/v1?label=Maven&message=dev.mintychochip:preferences-api:0.2.0&color=blue)](https://github.com/aincraft-org/preferences/packages)
-[![Version](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/aincraft-org/preferences/releases)
+[![Maven](https://img.shields.io/static/v1?label=Maven&message=dev.mintychochip:preferences-api&color=blue)](https://github.com/aincraft-org/preferences/packages)
+[![Version](https://img.shields.io/badge/version-CalVer-blue)](https://github.com/aincraft-org/preferences/releases)
 
 Paper **26.2+** plugin that lets other plugins declare typed preferences and get a native dialog GUI, state management, and YAML persistence for free.
 
@@ -21,7 +21,7 @@ Paper **26.2+** plugin that lets other plugins declare typed preferences and get
 
 ## Install
 
-1. Download `preferences-paper/build/libs/preferences-0.2.0.jar` (or publish it locally).
+1. Download `preferences-paper/build/libs/preferences-<version>.jar` (or publish it locally).
 2. Drop it in your server's `plugins/` directory.
 3. Restart; hooking plugins will register their preferences at enable time.
 
@@ -47,7 +47,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("dev.mintychochip:preferences-api:0.2.0")
+    compileOnly("dev.mintychochip:preferences-api:<calver-version>") // e.g. YYYY.MM.DD.<run>
     compileOnly("io.papermc.paper:paper-api:26.2.build.+")
 }
 ```
@@ -58,7 +58,7 @@ Maven:
 <dependency>
   <groupId>dev.mintychochip</groupId>
   <artifactId>preferences-api</artifactId>
-  <version>0.2.0</version>
+  <version>YYYY.MM.DD.&lt;run&gt;</version> <!-- CalVer: YYYY.MM.DD.<github_run_number> -->
   <scope>provided</scope>
 </dependency>
 ```

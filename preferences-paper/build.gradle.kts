@@ -25,6 +25,12 @@ tasks.jar {
     archiveBaseName.set("preferences")
 }
 
+tasks.processResources {
+    filesMatching("plugin.yml") {
+        expand("version" to project.version)
+    }
+}
+
 // Optional coordinate for the shippable plugin jar (not required for API consumers).
 publishing {
     publications {

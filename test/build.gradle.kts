@@ -13,6 +13,12 @@ tasks.jar {
     archiveBaseName.set("preferences-test")
 }
 
+tasks.processResources {
+    filesMatching("plugin.yml") {
+        expand("version" to project.version)
+    }
+}
+
 tasks {
     runServer {
         minecraftVersion("26.2")

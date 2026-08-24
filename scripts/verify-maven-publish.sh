@@ -14,12 +14,13 @@ trap cleanup EXIT
 echo "==> Publishing :preferences-api to mavenLocal"
 ./gradlew --no-daemon :preferences-api:publishToMavenLocal
 
-# Locate the published jar under the user's local Maven repo.
-GROUP_PATH="dev/mintychochip/preferences-api"
-VERSION="$(grep -E '^\s*version\s*=' build.gradle.kts | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
+# Derive the version from Gradle's own CalVer provider (single source of truth).
+VERSION="$(./gradlew --no-daemon -q :preferences-api:properties | sed -n 's/^version: //p')"
 if [[ -z "$VERSION" ]]; then
-  VERSION="0.2.0"
+  echo "ERROR: could not determine project version from Gradle" >&2
+  exit 1
 fi
+GROUP_PATH="dev/mintychochip/preferences-api"
 M2="${HOME}/.m2/repository/${GROUP_PATH}/${VERSION}"
 JAR="${M2}/preferences-api-${VERSION}.jar"
 POM="${M2}/preferences-api-${VERSION}.pom"

@@ -1,7 +1,7 @@
 # Preferences — Usage Guide
 
 Paper **26.2+** plugin: other plugins declare typed preferences; this plugin provides
-the dialog GUI, state management, and YAML persistence for them. **v0.2.0.**
+the dialog GUI, state management, and YAML persistence for them. **CalVer** (`YYYY.MM.DD.<github_run_number>` in CI, dated `-SNAPSHOT` locally).
 
 This file is the usage guide for AGENTS.md.
 
@@ -24,7 +24,7 @@ This file is the usage guide for AGENTS.md.
 
 ### Install
 
-1. Drop `preferences-0.2.0.jar` into `plugins/`.
+1. Drop the built `preferences-<version>.jar` (from `preferences-paper/build/libs/`) into `plugins/`.
 2. Restart the server (or `/reload`).
 3. Done — hooking plugins register their preferences at their own enable time.
 
@@ -95,7 +95,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("dev.mintychochip:preferences-api:0.2.0")
+    compileOnly("dev.mintychochip:preferences-api:<calver-version>") // e.g. YYYY.MM.DD.<run>
     compileOnly("io.papermc.paper:paper-api:26.2.build.+")
 }
 ```
