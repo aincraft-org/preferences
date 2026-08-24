@@ -15,4 +15,4 @@ pluginManagement {
     }
 }
 
-include("preferences-api", "preferences-common", "preferences-paper", "test")
+include("preferences-api", "preferences-common", "preferences-paper", "preferences-test")

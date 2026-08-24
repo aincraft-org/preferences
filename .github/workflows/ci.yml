@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build and test (incl. :test module)
+    name: Build and test (incl. :preferences-test module)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -31,7 +31,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Multi-module build + unit tests
-        # Root aggregator has no `test` task; `:ci` builds all modules (incl. :test) and runs subproject tests.
+        # Root aggregator has no `test` task; `:ci` builds all modules (incl. :preferences-test) and runs subproject tests.
         run: ./gradlew --no-daemon --stacktrace ci
 
       - name: Prove Maven publish path (local + consumer resolve)

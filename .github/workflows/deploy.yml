@@ -42,7 +42,7 @@ jobs:
           java-version: "25"
 
       - name: Build
-        run: ./gradlew --no-daemon :test:build
+        run: ./gradlew --no-daemon :preferences-test:build
 
       - name: Deploy
         env:
@@ -51,4 +51,4 @@ jobs:
           PEBBLEHOST_RESTART: ${{ inputs.restart }}
           PEBBLEHOST_ROLLBACK: ${{ inputs.rollback }}
           PEBBLEHOST_CONTINUE_AFTER_CANARY: ${{ inputs.continue-after-canary }}
-        run: ./gradlew --no-daemon :test:deployPebbleHost "-PpebblehostTargets=$PEBBLEHOST_TARGETS" "--deploy-restart=$PEBBLEHOST_RESTART" "--deploy-rollback=$PEBBLEHOST_ROLLBACK" "--continue-after-canary=$PEBBLEHOST_CONTINUE_AFTER_CANARY"
+        run: ./gradlew --no-daemon :preferences-test:deployPebbleHost "-PpebblehostTargets=$PEBBLEHOST_TARGETS" "--deploy-restart=$PEBBLEHOST_RESTART" "--deploy-rollback=$PEBBLEHOST_ROLLBACK" "--continue-after-canary=$PEBBLEHOST_CONTINUE_AFTER_CANARY"
