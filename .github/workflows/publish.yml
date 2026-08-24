@@ -13,6 +13,9 @@ jobs:
     permissions:
       contents: read
       packages: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_ACTOR: ${{ github.actor }}
 
     steps:
       - name: Checkout
@@ -31,7 +34,4 @@ jobs:
         run: ./gradlew --no-daemon :preferences-api:build :preferences-paper:build :preferences-api:test :preferences-common:test
 
       - name: Publish to GitHub Packages
-        env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew --no-daemon :preferences-api:publish :preferences-paper:publish
