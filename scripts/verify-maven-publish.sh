@@ -35,8 +35,16 @@ test -f "$POM"
 
 echo "==> Building isolated consumer against mavenLocal only"
 mkdir -p "$CONSUMER/src/main/java/consume"
-cat >"$CONSUMER/settings.gradle.kts" <<'EOF'
+cat >"$CONSUMER/settings.gradle.kts" <<EOF
 rootProject.name = "preferences-api-consumer"
+
+dependencyResolutionManagement {
+    versionCatalogs {
+        create("libs") {
+            from(files("$ROOT/gradle/libs.versions.toml"))
+        }
+    }
+}
 EOF
 
 cat >"$CONSUMER/build.gradle.kts" <<EOF
@@ -51,7 +59,7 @@ repositories {
 dependencies {
     // Real published coordinate — NOT project(":preferences-api")
     implementation("dev.mintychochip:preferences-api:${VERSION}")
-    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
+    compileOnly(libs.paper.api)
 }
 
 java {

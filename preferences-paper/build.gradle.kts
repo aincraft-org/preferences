@@ -5,8 +5,8 @@ plugins {
 dependencies {
     implementation(project(":preferences-common"))
 
-    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
-    compileOnly("org.jspecify:jspecify:1.0.0")
+    compileOnly(libs.paper.api)
+    compileOnly(libs.jspecify)
 }
 
 // Ship api + common classes inside the Preferences plugin jar so a single

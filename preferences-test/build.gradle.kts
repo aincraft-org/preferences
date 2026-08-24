@@ -1,12 +1,12 @@
 plugins {
-    id("xyz.jpenilla.run-paper") version "3.0.2"
-    id("dev.pebblehost.deploy") version "2026.08.21"
+    alias(libs.plugins.run.paper)
+    alias(libs.plugins.pebblehost.deploy)
 }
 
 dependencies {
     // Public registration surface only — never paper/common internals.
     compileOnly(project(":preferences-api"))
-    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
+    compileOnly(libs.paper.api)
 }
 
 tasks.jar {

@@ -3,14 +3,14 @@ plugins {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
-    compileOnly("org.jspecify:jspecify:1.0.0")
+    compileOnly(libs.paper.api)
+    compileOnly(libs.jspecify)
 
-    testImplementation("io.papermc.paper:paper-api:26.2.build.+")
-    testImplementation(platform("org.junit:junit-bom:5.11.4"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.mockito:mockito-core:5.23.0")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(libs.paper.api)
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockito.core)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 // Stable Maven coordinate for hooking plugins: dev.mintychochip:preferences-api:<version>
