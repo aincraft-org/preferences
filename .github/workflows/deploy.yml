@@ -8,12 +8,12 @@ on:
         required: true
         type: string
       continue-after-canary:
-        description: Deploy to remaining targets after the canary succeeds
+        description: After confirming canary health and plugin load, request protected rollout of remaining targets
         type: boolean
         default: false
 
 jobs:
-  deploy:
+  deploy-canary:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -57,6 +57,13 @@ jobs:
           fi
           echo "jar=${jars[0]}" >> "$GITHUB_OUTPUT"
 
+      - name: Save deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pebblehost-artifact
+          path: ${{ steps.artifact.outputs.jar }}
+          if-no-files-found: error
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
@@ -81,9 +88,10 @@ jobs:
           : "${PEBBLEHOST_API_TOKEN:?PEBBLEHOST_API_TOKEN is required}"
           "$PB_BIN" --version
           "$PB_BIN" file --help | grep -Fq 'push'
+          jq --version
           "$PB_BIN" servers --json > /dev/null
 
-      - name: Upload, restart, and verify targets
+      - name: Upload, restart, and verify canary
         env:
           JAR: ${{ steps.artifact.outputs.jar }}
           PEBBLEHOST_API_TOKEN: ${{ secrets.PEBBLEHOST_API_TOKEN }}
@@ -96,12 +104,158 @@ jobs:
             exit 1
           fi
 
-          target_count=${#target_specs[@]}
-          if [[ "$PEBBLEHOST_CONTINUE_AFTER_CANARY" != "true" ]]; then
-            target_count=1
+          server_id="${target_specs[0]//[[:space:]]/}"
+          [[ -n "$server_id" ]] || {
+            echo "The canary target is empty." >&2
+            exit 1
+          }
+          echo "Uploading $JAR to canary $server_id."
+          "$PB_BIN" file push "$JAR" \
+            --server "$server_id" \
+            --directory plugins
+          "$PB_BIN" power "$server_id" --action restart
+
+          health_timeout_seconds=180
+          health_interval_seconds=5
+
+          wait_for_running() {
+            local server_id=$1
+            local deadline=$((SECONDS + health_timeout_seconds))
+            local state=""
+            while true; do
+              local response
+              if response=$("$PB_BIN" resources "$server_id" --json 2>/dev/null); then
+                state=$(jq -r '.attributes.current_state // empty' <<<"$response" 2>/dev/null || true)
+              else
+                state=""
+              fi
+              if [[ "$state" == "running" ]]; then
+                echo "$server_id is running."
+                return 0
+              fi
+              if (( SECONDS >= deadline )); then
+                echo "Timed out waiting for $server_id to reach running (last state: ${state:-unknown})." >&2
+                return 1
+              fi
+              echo "Waiting for $server_id to reach running (current state: ${state:-unknown})."
+              sleep "$health_interval_seconds"
+            done
+          }
+
+          wait_for_running "$server_id"
+          echo "Canary health check passed."
+          if [[ "$PEBBLEHOST_CONTINUE_AFTER_CANARY" == "true" ]]; then
+            echo "Remaining targets are queued behind the protected pebblehost-rollout environment."
+          else
+            echo "Remaining target rollout was not requested."
           fi
 
-          for (( index = 0; index < target_count; index++ )); do
+  deploy-remaining:
+    if: ${{ inputs.continue-after-canary }}
+    needs: deploy-canary
+    # Configure required reviewers for this environment in repository settings.
+    environment: pebblehost-rollout
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      PEBBLEHOST_TARGETS: ${{ inputs.targets }}
+      PB_CLI_COMMIT: 501428ae0b2e22c1302845f77230b44972b37790
+
+    steps:
+      - name: Download deployment artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pebblehost-artifact
+          path: artifact
+
+      - name: Select deployment artifact
+        id: artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t jars < <(
+            find artifact -type f \
+              -name 'preferences-test-*.jar' \
+              ! -name '*-sources.jar' \
+              ! -name '*-javadoc.jar' \
+              | sort
+          )
+          if (( ${#jars[@]} != 1 )); then
+            printf 'Expected exactly one downloaded jar, found %s:\n' "${#jars[@]}" >&2
+            printf '  %s\n' "${jars[@]}" >&2
+            exit 1
+          fi
+          echo "jar=${jars[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build pinned push-capable pb
+        shell: bash
+        run: |
+          set -euo pipefail
+          cli_dir="$RUNNER_TEMP/pebblehost-cli"
+          git init "$cli_dir"
+          git -C "$cli_dir" remote add origin https://github.com/mintychochip/pebblehost-cli.git
+          git -C "$cli_dir" fetch --depth 1 origin "$PB_CLI_COMMIT"
+          git -C "$cli_dir" checkout --detach "$PB_CLI_COMMIT"
+          cargo build --release --manifest-path "$cli_dir/Cargo.toml"
+          echo "PB_BIN=$cli_dir/target/release/pb" >> "$GITHUB_ENV"
+
+      - name: Verify pb capability and access
+        env:
+          PEBBLEHOST_API_TOKEN: ${{ secrets.PEBBLEHOST_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${PEBBLEHOST_API_TOKEN:?PEBBLEHOST_API_TOKEN is required}"
+          "$PB_BIN" --version
+          "$PB_BIN" file --help | grep -Fq 'push'
+          jq --version
+          "$PB_BIN" servers --json > /dev/null
+
+      - name: Upload, restart, and verify remaining targets
+        env:
+          JAR: ${{ steps.artifact.outputs.jar }}
+          PEBBLEHOST_API_TOKEN: ${{ secrets.PEBBLEHOST_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          IFS=',' read -r -a target_specs <<< "$PEBBLEHOST_TARGETS"
+          if (( ${#target_specs[@]} <= 1 )); then
+            echo "No remaining targets after the canary."
+            exit 0
+          fi
+
+          health_timeout_seconds=180
+          health_interval_seconds=5
+
+          wait_for_running() {
+            local server_id=$1
+            local deadline=$((SECONDS + health_timeout_seconds))
+            local state=""
+            while true; do
+              local response
+              if response=$("$PB_BIN" resources "$server_id" --json 2>/dev/null); then
+                state=$(jq -r '.attributes.current_state // empty' <<<"$response" 2>/dev/null || true)
+              else
+                state=""
+              fi
+              if [[ "$state" == "running" ]]; then
+                echo "$server_id is running."
+                return 0
+              fi
+              if (( SECONDS >= deadline )); then
+                echo "Timed out waiting for $server_id to reach running (last state: ${state:-unknown})." >&2
+                return 1
+              fi
+              echo "Waiting for $server_id to reach running (current state: ${state:-unknown})."
+              sleep "$health_interval_seconds"
+            done
+          }
+
+          for (( index = 1; index < ${#target_specs[@]}; index++ )); do
             server_id="${target_specs[index]//[[:space:]]/}"
             [[ -n "$server_id" ]] || {
               echo "Target $((index + 1)) is empty." >&2
@@ -112,10 +266,6 @@ jobs:
               --server "$server_id" \
               --directory plugins
             "$PB_BIN" power "$server_id" --action restart
-            "$PB_BIN" server "$server_id" --json > /dev/null
+            wait_for_running "$server_id"
           done
-
-          if [[ "$PEBBLEHOST_CONTINUE_AFTER_CANARY" != "true" ]] && (( ${#target_specs[@]} > 1 )); then
-            echo "Canary complete. Re-run with continue-after-canary=true for remaining targets."
-          fi
-          echo "Confirm plugin load in each server console/log before treating deployment as complete."
+          echo "Remaining target health checks passed. Confirm plugin load in each server console/log before treating deployment as complete."
