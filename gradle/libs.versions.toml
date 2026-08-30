@@ -5,7 +5,6 @@ junit-bom = "5.11.4"
 mockito = "5.23.0"
 caffeine = "3.2.0"
 run-paper = "3.0.2"
-pebblehost-deploy = "2026.08.21"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper-api" }
@@ -18,4 +17,3 @@ caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "c
 
 [plugins]
 run-paper = { id = "xyz.jpenilla.run-paper", version.ref = "run-paper" }
-pebblehost-deploy = { id = "dev.pebblehost.deploy", version.ref = "pebblehost-deploy" }
