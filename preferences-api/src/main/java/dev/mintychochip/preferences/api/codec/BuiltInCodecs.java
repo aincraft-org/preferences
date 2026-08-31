@@ -1,6 +1,6 @@
 package dev.mintychochip.preferences.api.codec;
 
-import java.util.Objects;
+import com.google.common.base.Preconditions;
 
 /**
  * Shared {@link StorageCodec} instances for common preference value types.
@@ -13,23 +13,23 @@ public final class BuiltInCodecs {
     /** Identity codec for plain strings. */
     public static final StorageCodec<String> STRING = new StorageCodec<>() {
         @Override public String parse(String stored) {
-            return Objects.requireNonNull(stored, "stored");
+            return Preconditions.checkNotNull(stored, "stored");
         }
         @Override public String write(String value) {
-            return Objects.requireNonNull(value, "value");
+            return Preconditions.checkNotNull(value, "value");
         }
     };
 
     /** Codec for {@code "true"} and {@code "false"} string literals only. */
     public static final StorageCodec<Boolean> BOOLEAN = new StorageCodec<>() {
         @Override public Boolean parse(String stored) {
-            Objects.requireNonNull(stored, "stored");
+            Preconditions.checkNotNull(stored, "stored");
             if ("true".equals(stored)) return Boolean.TRUE;
             if ("false".equals(stored)) return Boolean.FALSE;
             throw new IllegalArgumentException("not a boolean: " + stored);
         }
         @Override public String write(Boolean value) {
-            return Objects.requireNonNull(value, "value").toString();
+            return Preconditions.checkNotNull(value, "value").toString();
         }
     };
 
@@ -51,17 +51,17 @@ public final class BuiltInCodecs {
      * @throws NullPointerException if {@code type} is {@code null}
      */
     public static <E extends Enum<E>> StorageCodec<E> enumerated(Class<E> type) {
-        Objects.requireNonNull(type, "type");
+        Preconditions.checkNotNull(type, "type");
         return new StorageCodec<>() {
             @Override public E parse(String stored) {
-                Objects.requireNonNull(stored, "stored");
+                Preconditions.checkNotNull(stored, "stored");
                 try { return Enum.valueOf(type, stored); }
                 catch (IllegalArgumentException e) {
                     throw new IllegalArgumentException("no " + type.getSimpleName() + " constant: " + stored);
                 }
             }
             @Override public String write(E value) {
-                return Objects.requireNonNull(value, "value").name();
+                return Preconditions.checkNotNull(value, "value").name();
             }
         };
     }
@@ -70,12 +70,12 @@ public final class BuiltInCodecs {
                                                java.util.function.Function<T, String> write) {
         return new StorageCodec<>() {
             @Override public T parse(String stored) {
-                Objects.requireNonNull(stored, "stored");
+                Preconditions.checkNotNull(stored, "stored");
                 try { return parse.apply(stored); }
                 catch (RuntimeException e) { throw new IllegalArgumentException("invalid value: " + stored, e); }
             }
             @Override public String write(T value) {
-                return write.apply(Objects.requireNonNull(value, "value"));
+                return write.apply(Preconditions.checkNotNull(value, "value"));
             }
         };
     }

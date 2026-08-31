@@ -1,5 +1,7 @@
 package dev.mintychochip.preferences.api.event;
 
+import com.google.common.base.Preconditions;
+
 import dev.mintychochip.preferences.api.PreferenceKey;
 import java.util.UUID;
 import org.bukkit.event.Cancellable;
@@ -34,9 +36,9 @@ public class PreferenceChangeEvent extends Event implements Cancellable {
      * @throws NullPointerException if {@code key}, {@code oldValue}, or {@code newValue} is {@code null}
      */
     public PreferenceChangeEvent(PreferenceKey key, String oldValue, String newValue, @Nullable UUID editor) {
-        this.key = java.util.Objects.requireNonNull(key, "key");
-        this.oldValue = java.util.Objects.requireNonNull(oldValue, "oldValue");
-        this.newValue = java.util.Objects.requireNonNull(newValue, "newValue");
+        this.key = Preconditions.checkNotNull(key, "key");
+        this.oldValue = Preconditions.checkNotNull(oldValue, "oldValue");
+        this.newValue = Preconditions.checkNotNull(newValue, "newValue");
         this.editor = editor; // intentionally nullable (programmatic/console)
     }
 

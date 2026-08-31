@@ -4,7 +4,7 @@ import dev.mintychochip.preferences.api.PreferenceKey;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import com.google.common.base.Preconditions;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
@@ -34,7 +34,7 @@ public final class PreferenceRegistry {
      * @throws IllegalStateException if the key is already registered
      */
     public void register(RegisteredPreference<?> pref) {
-        Objects.requireNonNull(pref, "pref");
+        Preconditions.checkNotNull(pref, "pref");
         if (prefs.putIfAbsent(pref.key(), pref) != null) {
             throw new IllegalStateException("preference already registered: " + pref.key().asString());
         }
@@ -49,7 +49,7 @@ public final class PreferenceRegistry {
      * @throws NullPointerException if {@code key} is null
      */
     public @Nullable RegisteredPreference<?> byKey(PreferenceKey key) {
-        Objects.requireNonNull(key, "key");
+        Preconditions.checkNotNull(key, "key");
         return prefs.get(key);
     }
 
@@ -69,7 +69,7 @@ public final class PreferenceRegistry {
      * @throws NullPointerException if {@code namespace} is null
      */
     public void unregisterNamespace(String namespace) {
-        Objects.requireNonNull(namespace, "namespace");
+        Preconditions.checkNotNull(namespace, "namespace");
         prefs.keySet().removeIf(k -> k.namespace().equals(namespace));
     }
 
@@ -84,7 +84,7 @@ public final class PreferenceRegistry {
      * @throws NullPointerException if {@code hook} is null
      */
     public void onRegister(Consumer<RegisteredPreference<?>> hook) {
-        Objects.requireNonNull(hook, "hook");
+        Preconditions.checkNotNull(hook, "hook");
         onRegister.add(hook);
         all().forEach(hook);
     }

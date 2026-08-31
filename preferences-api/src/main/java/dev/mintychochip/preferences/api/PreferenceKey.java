@@ -1,6 +1,6 @@
 package dev.mintychochip.preferences.api;
 
-import java.util.Objects;
+import com.google.common.base.Preconditions;
 
 /**
  * Stable identifier for a registered preference, composed of a plugin namespace and preference name.
@@ -19,8 +19,8 @@ public record PreferenceKey(String namespace, String name) {
      * @throws IllegalArgumentException if either component contains disallowed characters
      */
     public PreferenceKey {
-        Objects.requireNonNull(namespace, "namespace");
-        Objects.requireNonNull(name, "name");
+        Preconditions.checkNotNull(namespace, "namespace");
+        Preconditions.checkNotNull(name, "name");
         // No dots: dot is Bukkit YamlConfiguration's path separator and would corrupt storage keys.
         if (!namespace.matches("[a-z0-9_-]+")) {
             throw new IllegalArgumentException("bad namespace: " + namespace);

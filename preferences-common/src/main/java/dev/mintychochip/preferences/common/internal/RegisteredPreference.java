@@ -7,7 +7,7 @@ import dev.mintychochip.preferences.api.PreferenceScope;
 import dev.mintychochip.preferences.api.codec.PreferenceCodec;
 import dev.mintychochip.preferences.api.event.PreferenceChangeEvent;
 import java.util.Map;
-import java.util.Objects;
+import com.google.common.base.Preconditions;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -80,13 +80,13 @@ public final class RegisteredPreference<T> implements Preference<T> {
     public RegisteredPreference(PreferenceKey key, PreferenceScope scope, Component label,
                                 Component description, PreferenceCodec<T> codec, Class<T> type,
                                 T defaultValue, @Nullable Consumer<PreferenceChange> onChange) {
-        this.key = Objects.requireNonNull(key, "key");
-        this.scope = Objects.requireNonNull(scope, "scope");
-        this.label = Objects.requireNonNull(label, "label");
-        this.description = Objects.requireNonNull(description, "description");
-        this.codec = Objects.requireNonNull(codec, "codec");
-        this.type = Objects.requireNonNull(type, "type");
-        this.defaultValue = Objects.requireNonNull(defaultValue, "defaultValue");
+        this.key = Preconditions.checkNotNull(key, "key");
+        this.scope = Preconditions.checkNotNull(scope, "scope");
+        this.label = Preconditions.checkNotNull(label, "label");
+        this.description = Preconditions.checkNotNull(description, "description");
+        this.codec = Preconditions.checkNotNull(codec, "codec");
+        this.type = Preconditions.checkNotNull(type, "type");
+        this.defaultValue = Preconditions.checkNotNull(defaultValue, "defaultValue");
         this.onChange = onChange; // intentionally nullable
     }
 
@@ -146,7 +146,7 @@ public final class RegisteredPreference<T> implements Preference<T> {
     @Override
     public T get(Player player) {
         checkScope(PreferenceScope.PLAYER);
-        Objects.requireNonNull(player, "player");
+        Preconditions.checkNotNull(player, "player");
         return playerValues.computeIfAbsent(player.getUniqueId(), uuid -> {
             String stored = storedValueLookup == null ? null
                 : storedValueLookup.apply(key.namespace() + "\u0000" + uuid + "\u0000" + key.name());
@@ -197,8 +197,8 @@ public final class RegisteredPreference<T> implements Preference<T> {
     @Override
     public void set(Player player, T newValue) {
         checkScope(PreferenceScope.PLAYER);
-        Objects.requireNonNull(player, "player");
-        Objects.requireNonNull(newValue, "value");
+        Preconditions.checkNotNull(player, "player");
+        Preconditions.checkNotNull(newValue, "value");
         apply(player, player.getUniqueId(), newValue);
     }
 
@@ -215,7 +215,7 @@ public final class RegisteredPreference<T> implements Preference<T> {
     @Override
     public void setGlobal(T newValue) {
         checkScope(PreferenceScope.GLOBAL);
-        Objects.requireNonNull(newValue, "value");
+        Preconditions.checkNotNull(newValue, "value");
         apply(null, null, newValue); // editor intentionally null (programmatic)
     }
 
@@ -234,8 +234,8 @@ public final class RegisteredPreference<T> implements Preference<T> {
     @Override
     public void setGlobal(Player editor, T newValue) {
         checkScope(PreferenceScope.GLOBAL);
-        Objects.requireNonNull(editor, "editor");
-        Objects.requireNonNull(newValue, "value");
+        Preconditions.checkNotNull(editor, "editor");
+        Preconditions.checkNotNull(newValue, "value");
         apply(null, editor.getUniqueId(), newValue);
     }
 
@@ -247,7 +247,7 @@ public final class RegisteredPreference<T> implements Preference<T> {
      */
     @Override
     public void reset(Player player) {
-        Objects.requireNonNull(player, "player");
+        Preconditions.checkNotNull(player, "player");
         set(player, defaultValue);
     }
 
@@ -322,6 +322,6 @@ public final class RegisteredPreference<T> implements Preference<T> {
      * @throws NullPointerException if {@code uuid} is null
      */
     public void invalidatePlayer(UUID uuid) {
-        playerValues.remove(Objects.requireNonNull(uuid, "uuid"));
+        playerValues.remove(Preconditions.checkNotNull(uuid, "uuid"));
     }
 }

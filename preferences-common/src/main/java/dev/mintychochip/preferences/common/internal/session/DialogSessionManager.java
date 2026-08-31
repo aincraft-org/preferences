@@ -1,7 +1,7 @@
 package dev.mintychochip.preferences.common.internal.session;
 
 import java.util.Map;
-import java.util.Objects;
+import com.google.common.base.Preconditions;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jspecify.annotations.Nullable;
@@ -22,7 +22,7 @@ public final class DialogSessionManager {
      * @param session session to store
      */
     public void open(DialogSession session) {
-        sessions.put(Objects.requireNonNull(session, "session").player(), session);
+        sessions.put(Preconditions.checkNotNull(session, "session").player(), session);
     }
 
     /**
@@ -32,7 +32,7 @@ public final class DialogSessionManager {
      * @return current session, or {@code null} if none
      */
     public @Nullable DialogSession current(UUID player) {
-        return sessions.get(Objects.requireNonNull(player, "player"));
+        return sessions.get(Preconditions.checkNotNull(player, "player"));
     }
 
     /**
@@ -41,7 +41,7 @@ public final class DialogSessionManager {
      * @param player player id
      */
     public void close(UUID player) {
-        sessions.remove(Objects.requireNonNull(player, "player"));
+        sessions.remove(Preconditions.checkNotNull(player, "player"));
     }
 
     /**
@@ -53,8 +53,8 @@ public final class DialogSessionManager {
      * @throws NullPointerException if {@code player} or {@code screen} is null
      */
     public boolean matches(UUID player, DialogSession.Screen screen) {
-        Objects.requireNonNull(player, "player");
-        Objects.requireNonNull(screen, "screen");
+        Preconditions.checkNotNull(player, "player");
+        Preconditions.checkNotNull(screen, "screen");
         DialogSession s = sessions.get(player);
         return s != null && s.screen() == screen;
     }
@@ -70,7 +70,7 @@ public final class DialogSessionManager {
      * @throws NullPointerException if {@code namespace} is null
      */
     public void closeForNamespace(String namespace) {
-        Objects.requireNonNull(namespace, "namespace");
+        Preconditions.checkNotNull(namespace, "namespace");
         sessions.values().removeIf(s -> s.editTarget() != null && s.editTarget().namespace().equals(namespace));
     }
 }

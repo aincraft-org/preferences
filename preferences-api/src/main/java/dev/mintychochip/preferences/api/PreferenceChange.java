@@ -1,6 +1,6 @@
 package dev.mintychochip.preferences.api;
 
-import java.util.Objects;
+import com.google.common.base.Preconditions;
 
 /**
  * Payload delivered to per-preference {@link java.util.function.Consumer} change callbacks.
@@ -19,8 +19,8 @@ public record PreferenceChange(PreferenceKey key, String oldValue, String newVal
      * @throws NullPointerException if any component is {@code null}
      */
     public PreferenceChange {
-        Objects.requireNonNull(key, "key");
-        Objects.requireNonNull(oldValue, "oldValue");
-        Objects.requireNonNull(newValue, "newValue");
+        Preconditions.checkNotNull(key, "key");
+        Preconditions.checkNotNull(oldValue, "oldValue");
+        Preconditions.checkNotNull(newValue, "newValue");
     }
 }

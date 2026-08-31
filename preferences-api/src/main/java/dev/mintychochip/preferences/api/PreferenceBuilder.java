@@ -1,7 +1,7 @@
 package dev.mintychochip.preferences.api;
 
+import com.google.common.base.Preconditions;
 import dev.mintychochip.preferences.api.codec.PreferenceCodec;
-import java.util.Objects;
 import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.Nullable;
@@ -34,8 +34,8 @@ public final class PreferenceBuilder<T> {
      * @throws NullPointerException if {@code namespace} or {@code type} is {@code null}
      */
     public PreferenceBuilder(String namespace, Class<T> type) {
-        this.namespace = Objects.requireNonNull(namespace, "namespace");
-        this.type = Objects.requireNonNull(type, "type");
+        this.namespace = Preconditions.checkNotNull(namespace, "namespace");
+        this.type = Preconditions.checkNotNull(type, "type");
     }
 
     /**
@@ -46,7 +46,7 @@ public final class PreferenceBuilder<T> {
      * @throws NullPointerException if {@code name} is {@code null}
      */
     public PreferenceBuilder<T> playerScoped(String name) {
-        this.name = Objects.requireNonNull(name, "name");
+        this.name = Preconditions.checkNotNull(name, "name");
         this.scope = PreferenceScope.PLAYER;
         return this;
     }
@@ -59,7 +59,7 @@ public final class PreferenceBuilder<T> {
      * @throws NullPointerException if {@code name} is {@code null}
      */
     public PreferenceBuilder<T> global(String name) {
-        this.name = Objects.requireNonNull(name, "name");
+        this.name = Preconditions.checkNotNull(name, "name");
         this.scope = PreferenceScope.GLOBAL;
         return this;
     }
@@ -72,7 +72,7 @@ public final class PreferenceBuilder<T> {
      * @throws NullPointerException if {@code label} is {@code null}
      */
     public PreferenceBuilder<T> label(Component label) {
-        this.label = Objects.requireNonNull(label, "label");
+        this.label = Preconditions.checkNotNull(label, "label");
         return this;
     }
 
@@ -84,7 +84,7 @@ public final class PreferenceBuilder<T> {
      * @throws NullPointerException if {@code description} is {@code null}
      */
     public PreferenceBuilder<T> description(Component description) {
-        this.description = Objects.requireNonNull(description, "description");
+        this.description = Preconditions.checkNotNull(description, "description");
         return this;
     }
 
@@ -96,7 +96,7 @@ public final class PreferenceBuilder<T> {
      * @throws NullPointerException if {@code codec} is {@code null}
      */
     public PreferenceBuilder<T> codec(PreferenceCodec<T> codec) {
-        this.codec = Objects.requireNonNull(codec, "codec");
+        this.codec = Preconditions.checkNotNull(codec, "codec");
         return this;
     }
 
@@ -108,7 +108,7 @@ public final class PreferenceBuilder<T> {
      * @throws NullPointerException if {@code defaultValue} is {@code null}
      */
     public PreferenceBuilder<T> defaultValue(T defaultValue) {
-        this.defaultValue = Objects.requireNonNull(defaultValue, "defaultValue");
+        this.defaultValue = Preconditions.checkNotNull(defaultValue, "defaultValue");
         return this;
     }
 
@@ -123,7 +123,7 @@ public final class PreferenceBuilder<T> {
      * @throws NullPointerException if {@code onChange} is {@code null}
      */
     public PreferenceBuilder<T> onChange(Consumer<PreferenceChange> onChange) {
-        this.onChange = Objects.requireNonNull(onChange, "onChange");
+        this.onChange = Preconditions.checkNotNull(onChange, "onChange");
         return this;
     }
 

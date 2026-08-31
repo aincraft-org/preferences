@@ -5,7 +5,7 @@ import dev.mintychochip.preferences.api.PreferenceBuilder;
 import dev.mintychochip.preferences.api.PreferencesService;
 import java.util.Collection;
 import java.util.Locale;
-import java.util.Objects;
+import com.google.common.base.Preconditions;
 import java.util.function.Consumer;
 import org.bukkit.plugin.Plugin;
 import org.jspecify.annotations.Nullable;
@@ -34,16 +34,16 @@ public final class PreferencesServiceImpl implements PreferencesService {
      */
     public PreferencesServiceImpl(PreferenceRegistry registry,
                                   @Nullable Consumer<String> beforeUnregisterNamespace) {
-        this.registry = Objects.requireNonNull(registry, "registry");
+        this.registry = Preconditions.checkNotNull(registry, "registry");
         this.beforeUnregisterNamespace = beforeUnregisterNamespace; // intentionally nullable
     }
 
     /** {@inheritDoc} */
     @Override
     public <T> Preference<T> register(Plugin owner, Class<T> type, Consumer<PreferenceBuilder<T>> configure) {
-        Objects.requireNonNull(owner, "owner");
-        Objects.requireNonNull(type, "type");
-        Objects.requireNonNull(configure, "configure");
+        Preconditions.checkNotNull(owner, "owner");
+        Preconditions.checkNotNull(type, "type");
+        Preconditions.checkNotNull(configure, "configure");
         PreferenceBuilder<T> builder = new PreferenceBuilder<>(owner.getName().toLowerCase(Locale.ROOT), type);
         configure.accept(builder);
         builder.validate();
@@ -73,7 +73,7 @@ public final class PreferencesServiceImpl implements PreferencesService {
      */
     @Override
     public void unregisterPlugin(Plugin plugin) {
-        Objects.requireNonNull(plugin, "plugin");
+        Preconditions.checkNotNull(plugin, "plugin");
         String ns = plugin.getName().toLowerCase(Locale.ROOT);
         if (beforeUnregisterNamespace != null) {
             beforeUnregisterNamespace.accept(ns);

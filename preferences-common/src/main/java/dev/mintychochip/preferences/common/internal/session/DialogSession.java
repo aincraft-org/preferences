@@ -3,7 +3,7 @@ package dev.mintychochip.preferences.common.internal.session;
 import dev.mintychochip.preferences.api.PreferenceKey;
 import dev.mintychochip.preferences.api.PreferenceScope;
 import java.util.List;
-import java.util.Objects;
+import com.google.common.base.Preconditions;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
@@ -40,11 +40,11 @@ public record DialogSession(
      * Validates invariants and defensively copies list components.
      */
     public DialogSession {
-        Objects.requireNonNull(player, "player");
-        Objects.requireNonNull(screen, "screen");
-        Objects.requireNonNull(scope, "scope");
-        displayedItems = List.copyOf(Objects.requireNonNull(displayedItems, "displayedItems"));
-        displayedNamespaces = List.copyOf(Objects.requireNonNull(displayedNamespaces, "displayedNamespaces"));
+        Preconditions.checkNotNull(player, "player");
+        Preconditions.checkNotNull(screen, "screen");
+        Preconditions.checkNotNull(scope, "scope");
+        displayedItems = List.copyOf(Preconditions.checkNotNull(displayedItems, "displayedItems"));
+        displayedNamespaces = List.copyOf(Preconditions.checkNotNull(displayedNamespaces, "displayedNamespaces"));
         if (screen == Screen.EDIT && editTarget == null) {
             throw new IllegalArgumentException("editTarget is required for edit sessions");
         }
@@ -68,8 +68,8 @@ public record DialogSession(
 
         /** Validates required navigation fields. */
         public ParentContext {
-            Objects.requireNonNull(screen, "screen");
-            Objects.requireNonNull(scope, "scope");
+            Preconditions.checkNotNull(screen, "screen");
+            Preconditions.checkNotNull(scope, "scope");
         }
     }
 

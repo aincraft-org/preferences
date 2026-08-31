@@ -1,6 +1,6 @@
 package dev.mintychochip.preferences.api.codec;
 
-import java.util.Objects;
+import com.google.common.base.Preconditions;
 import java.util.function.Function;
 import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.Nullable;
@@ -19,7 +19,7 @@ public record PreferenceCodec<T>(StorageCodec<T> storage, @Nullable DialogInputA
      * @throws NullPointerException if {@code storage} is {@code null}
      */
     public PreferenceCodec {
-        Objects.requireNonNull(storage, "storage");
+        Preconditions.checkNotNull(storage, "storage");
         // input is intentionally nullable (read-only-in-GUI / storageOnly)
     }
 
@@ -101,8 +101,8 @@ public record PreferenceCodec<T>(StorageCodec<T> storage, @Nullable DialogInputA
      */
     public static <E extends Enum<E>> PreferenceCodec<E> enumerated(
             Class<E> type, Function<E, Component> display) {
-        Objects.requireNonNull(type, "type");
-        Objects.requireNonNull(display, "display");
+        Preconditions.checkNotNull(type, "type");
+        Preconditions.checkNotNull(display, "display");
         return new PreferenceCodec<>(BuiltInCodecs.enumerated(type), BuiltInAdapters.optionPicker(type, display));
     }
 
@@ -117,6 +117,6 @@ public record PreferenceCodec<T>(StorageCodec<T> storage, @Nullable DialogInputA
      * @throws NullPointerException if {@code storage} is {@code null}
      */
     public static <T> PreferenceCodec<T> storageOnly(StorageCodec<T> storage) {
-        return new PreferenceCodec<>(Objects.requireNonNull(storage, "storage"), null);
+        return new PreferenceCodec<>(Preconditions.checkNotNull(storage, "storage"), null);
     }
 }
