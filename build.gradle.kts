@@ -27,6 +27,9 @@ subprojects {
 
     configure<JavaPluginExtension> {
         withSourcesJar()
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
     }
 
     tasks.withType<JavaCompile>().configureEach {
